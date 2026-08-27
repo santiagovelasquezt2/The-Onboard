@@ -53,3 +53,5 @@ media/**
 # OpenF1 replay cache (CLI ingest); README under data/replays/ stays tracked
 data/replays/*.json
 public/replays/*.json
+.vercel
+.env*
