@@ -1,0 +1,73 @@
+name: Clean up closed PR previews
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  delete-preview-deployments:
+    # Fork pull requests cannot access repository secrets, and their preview
+    # deployments require explicit Vercel authorization anyway.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_CLEANUP_TOKEN }}
+      VERCEL_PROJECT_ID: prj_tpRIhZIBmNFxNxeK5PJPSIuqtaQB
+      VERCEL_TEAM_ID: team_fKP7pShXnknwnsuRazscZQuo
+      PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+
+    steps:
+      - name: Delete preview deployments for the closed branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${VERCEL_TOKEN}" ]]; then
+            echo "VERCEL_CLEANUP_TOKEN is not configured."
+            exit 1
+          fi
+
+          page_until=""
+          deleted_count=0
+
+          while :; do
+            request_args=(
+              --data-urlencode "projectId=${VERCEL_PROJECT_ID}"
+              --data-urlencode "teamId=${VERCEL_TEAM_ID}"
+              --data-urlencode "limit=100"
+            )
+            if [[ -n "${page_until}" ]]; then
+              request_args+=(--data-urlencode "until=${page_until}")
+            fi
+
+            deployments="$(curl --fail --silent --show-error --get \
+              "https://api.vercel.com/v6/deployments" \
+              --header "Authorization: Bearer ${VERCEL_TOKEN}" \
+              "${request_args[@]}")"
+
+            while IFS= read -r deployment_id; do
+              [[ -z "${deployment_id}" ]] && continue
+
+              curl --fail --silent --show-error --request DELETE \
+                "https://api.vercel.com/v13/deployments/${deployment_id}?teamId=${VERCEL_TEAM_ID}" \
+                --header "Authorization: Bearer ${VERCEL_TOKEN}" \
+                >/dev/null
+
+              echo "Deleted Vercel preview ${deployment_id}."
+              ((deleted_count += 1))
+            done < <(
+              jq -r --arg branch "${PR_BRANCH}" '
+                .deployments[]?
+                | select(.target == "preview" and .meta.githubCommitRef == $branch)
+                | .uid
+              ' <<<"${deployments}"
+            )
+
+            page_until="$(jq -r '.pagination.next // empty' <<<"${deployments}")"
+            [[ -z "${page_until}" ]] && break
+          done
+
+          echo "Deleted ${deleted_count} Vercel preview deployment(s) for ${PR_BRANCH}."
