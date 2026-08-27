@@ -256,7 +256,6 @@ export default function App() {
         <TrackScene
           replay={replay}
           playheadSeconds={playheadSeconds}
-          playing={playing}
           videoRef={videoRef}
           lapWindow={lapWindow}
           racingLineAnchors={racingLineAnchors}

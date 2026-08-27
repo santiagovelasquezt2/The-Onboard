@@ -36,7 +36,6 @@ import {
 type TrackSceneProps = {
   replay: ReplayFile | null
   playheadSeconds: number
-  playing: boolean
   videoRef: RefObject<HTMLVideoElement | null>
   lapWindow: LapWindow
   racingLineAnchors: readonly RacingLineAnchor[]
@@ -164,7 +163,6 @@ function ErrorOverlay() {
 export function TrackScene({
   replay,
   playheadSeconds,
-  playing,
   videoRef,
   lapWindow,
   racingLineAnchors,
