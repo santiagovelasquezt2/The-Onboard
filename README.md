@@ -12,6 +12,11 @@ npm run ingest:pull
 
 Writes e.g. `data/replays/2024-montreal-q-d63-lap22.json` and its browser-served mirror. Rate limits / 429 backoff are future CLI work. See `scripts/ingest/README.md` and `data/replays/README.md`.
 
+## Preview deployments
+
+Every open pull request gets a Vercel preview URL. Pushes to the PR update that
+preview automatically; closing the PR removes its preview deployments.
+
 ## Racing-line calibration
 
 Open `http://127.0.0.1:5176/?calibrate=1` while the dev server is running.
