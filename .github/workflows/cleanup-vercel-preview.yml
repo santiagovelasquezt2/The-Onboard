@@ -17,7 +17,7 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_CLEANUP_TOKEN }}
       VERCEL_PROJECT_ID: prj_tpRIhZIBmNFxNxeK5PJPSIuqtaQB
       VERCEL_TEAM_ID: team_fKP7pShXnknwnsuRazscZQuo
-      PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
 
     steps:
       - name: Delete preview deployments for the closed branch
@@ -59,9 +59,9 @@ jobs:
               echo "Deleted Vercel preview ${deployment_id}."
               ((deleted_count += 1))
             done < <(
-              jq -r --arg branch "${PR_BRANCH}" '
+              jq -r --arg pr_number "${PR_NUMBER}" '
                 .deployments[]?
-                | select(.target == "preview" and .meta.githubCommitRef == $branch)
+                | select(.meta.githubPrId == $pr_number)
                 | .uid
               ' <<<"${deployments}"
             )
@@ -70,4 +70,4 @@ jobs:
             [[ -z "${page_until}" ]] && break
           done
 
-          echo "Deleted ${deleted_count} Vercel preview deployment(s) for ${PR_BRANCH}."
+          echo "Deleted ${deleted_count} Vercel preview deployment(s) for PR #${PR_NUMBER}."
