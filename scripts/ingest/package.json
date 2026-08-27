@@ -1,0 +1,21 @@
+{
+  "name": "@theonboard/ingest",
+  "private": true,
+  "version": "0.0.1",
+  "description": "CLI stub: pull OpenF1 historical data into a compact replay file for TheOnboard",
+  "type": "module",
+  "bin": {
+    "pull": "./src/pull.ts"
+  },
+  "scripts": {
+    "pull": "tsx src/pull.ts",
+    "start": "tsx src/pull.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
