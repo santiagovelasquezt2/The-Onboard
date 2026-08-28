@@ -2,20 +2,32 @@ import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import { PerspectiveCamera, useGLTF } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { lapTimeFromVideoTime, type LapWindow } from '../../lapWindow'
+import type { LapWindow } from '../../lapWindow'
+import { vehicleLapTimeFromPreviewVideoLapTime } from '../../calibrationVideoLead'
+import { drivingLineComparisonVehicleTime } from '../../drivingLineComparisonTiming'
 import {
   advancePlaybackClock,
   createPlaybackClock,
   resetPlaybackClock,
+  type ReplaySeekState,
 } from '../../playbackClock'
 import {
   applySmoothedPose,
   createSmoothedPoseState,
-  resetSmoothedPose,
 } from '../../motionSmoothing'
 import { MotionInstrumenter } from '../../motionInstrumentation'
 import type { ReplayFile } from '../../replay'
 import type { RacingLineAnchor } from '../../racingLineCalibration'
+import {
+  replaySyncOffsetAtLapTime,
+  type ReplaySyncAnchor,
+} from '../../replaySyncCalibration'
+import {
+  forwardProgressDistance,
+  type AuthoredLinePoint,
+  type CalibrationDriveInput,
+  type CalibrationDriveSample,
+} from '../../authoredRacingLine'
 import { AUDITED_CURB_CONTACTS } from '../../curbContacts'
 import {
   collectSurfaceMeshes,
@@ -27,6 +39,8 @@ import {
   createReplayMotionRoute,
   createTrackBoundReplayMotionRoute,
   type ReplayCorridorSample,
+  type ReplayMotionRoute,
+  type ReplayMotionSample,
 } from './replayMotion'
 import {
   CAMERA_FAR,
@@ -54,6 +68,7 @@ import {
   ONBOARD_LOOK_FORWARD,
   ONBOARD_LOOK_HEIGHT,
   OVERHEAD_CAMERA_HEIGHT,
+  REPLAY_CALIBRATION_WHITE_LINE_ALLOWANCE_METERS,
   REPLAY_DRIVEABLE_MATERIAL_PATTERN,
   REPLAY_CURB_TRANSITION_METERS,
   REPLAY_CURB_PHASE_SEARCH_METERS,
@@ -75,9 +90,18 @@ import {
   isMotionDebugEnabled,
 } from './sceneConfig'
 import { SunLight } from './SunLight'
+import {
+  DrivingLinePreview,
+  type DrivingLinePreviewPoint,
+} from './DrivingLinePreview'
 import { CAR_URL, TRACK_URL } from './urls'
 
-type CameraMode = 'overhead' | 'chase' | 'onboard'
+export type SceneCameraMode = 'overhead' | 'chase' | 'onboard'
+
+const CALIBRATION_LATERAL_SPEED_METERS_PER_SECOND = 2.4
+const CALIBRATION_CAPTURE_SPACING_METERS = 1.8
+const CALIBRATION_CAPTURE_OFFSET_STEP_METERS = 0.04
+const CALIBRATION_MAXIMUM_FORWARD_PROGRESS_STEP = 0.01
 
 export type OnboardCameraRig = {
   back: number
@@ -87,7 +111,7 @@ export type OnboardCameraRig = {
   fov: number
 }
 
-function resolveCameraMode(): CameraMode {
+function resolveCameraMode(): SceneCameraMode {
   const search = new URLSearchParams(window.location.search)
   if (search.get('camera') === 'overhead' || search.get('calibrate') === '1') {
     return 'overhead'
@@ -124,7 +148,22 @@ type LapModelsProps = {
   videoRef: RefObject<HTMLVideoElement | null>
   lapWindow: LapWindow
   racingLineAnchors: readonly RacingLineAnchor[]
+  authoredLinePoints: readonly AuthoredLinePoint[]
+  drivingLinePreviewPath?: readonly AuthoredLinePoint[]
+  drivingLinePreviewPoints?: readonly DrivingLinePreviewPoint[]
+  replaySyncAnchors: readonly ReplaySyncAnchor[]
+  replaySeekRef?: RefObject<ReplaySeekState>
+  videoPreviewLeadSeconds?: number
+  vehicleTimeOffsetSeconds?: number
+  cameraModeOverride?: SceneCameraMode
+  overheadCameraHeightMeters?: number
+  calibrationDriveInputRef?: RefObject<CalibrationDriveInput>
+  calibrationCameraHeightRef?: RefObject<number>
   onCalibrationSample?: (sample: ReplayCorridorSample) => void
+  onCalibrationDriveSample?: (sample: CalibrationDriveSample) => void
+  onCalibrationDriveFrame?: (sample: CalibrationDriveSample) => void
+  onCalibrationDriveDiscontinuity?: () => void
+  onCalibrationSectionEnd?: (mode: 'record' | 'review') => void
 }
 
 function prepareTrack(scene: THREE.Group): THREE.Group {
@@ -248,7 +287,22 @@ export function LapModels({
   videoRef,
   lapWindow,
   racingLineAnchors,
+  authoredLinePoints,
+  drivingLinePreviewPath,
+  drivingLinePreviewPoints = [],
+  replaySyncAnchors,
+  replaySeekRef,
+  videoPreviewLeadSeconds = 0,
+  vehicleTimeOffsetSeconds = 0,
+  cameraModeOverride,
+  overheadCameraHeightMeters,
+  calibrationDriveInputRef,
+  calibrationCameraHeightRef,
   onCalibrationSample,
+  onCalibrationDriveSample,
+  onCalibrationDriveFrame,
+  onCalibrationDriveDiscontinuity,
+  onCalibrationSectionEnd,
 }: LapModelsProps) {
   const trackGltf = useGLTF(TRACK_URL)
   const carGltf = useGLTF(CAR_URL)
@@ -263,7 +317,23 @@ export function LapModels({
     typeof resolveReplayCarPose
   > | null>(null)
   const previousMediaPlayingRef = useRef<boolean | null>(null)
+  const previousReplaySeekEpochRef = useRef<number | null>(null)
+  const previousReplayRouteRef = useRef<ReplayMotionRoute | null | undefined>(
+    undefined,
+  )
   const lastCalibrationSampleLapRef = useRef<number | null>(null)
+  const lastCalibrationSampleOffsetRef = useRef<number | null>(null)
+  const lastCalibrationSampleBoundaryRef = useRef<boolean | null>(null)
+  const lastCalibrationSampleAuthoredWeightRef = useRef<number | null>(null)
+  const calibrationDriveStateRef = useRef({
+    sessionId: -1,
+    offsetMeters: 0,
+    previousFrameProgress: null as number | null,
+    lastCapturedProgress: null as number | null,
+    lastCapturedOffset: null as number | null,
+    lastDirection: 0 as -1 | 0 | 1,
+  })
+  const calibrationSectionEndSessionRef = useRef(-1)
   const cameraBasisRef = useRef({
     forward: new THREE.Vector3(0, 0, 1),
     right: new THREE.Vector3(1, 0, 0),
@@ -320,9 +390,11 @@ export function LapModels({
     }
   }, [motionDebug])
   // OpenF1 has no camera pose / steering / mount fields — T-cam is synthetic
-  // from car forward/up (see sceneConfig camera note). Modes: default onboard,
-  // ?camera=chase, ?camera=overhead (or ?calibrate=1). Live tune: ?tcam=...
-  const cameraMode = useMemo(() => resolveCameraMode(), [])
+  // from car forward/up (see sceneConfig camera note). The calibration panel
+  // can override its default overhead view for comparison during a live or
+  // paused section recording.
+  const defaultCameraMode = useMemo(() => resolveCameraMode(), [])
+  const cameraMode = cameraModeOverride ?? defaultCameraMode
   const onboardRig = useMemo(() => resolveOnboardCameraRig(), [])
   useEffect(() => {
     if (!import.meta.env.DEV) return
@@ -334,6 +406,18 @@ export function LapModels({
   }, [onboardRig])
   const durationMs =
     (replay?.lap.lap_duration ?? lapWindow.lapDurationSeconds) * 1000
+  const routeTimeMsAtLapTime = useMemo(
+    () => (lapTimeSeconds: number) =>
+      lapTimeSeconds * 1000 +
+      REPLAY_START_ROUTE_TIME_MS +
+      replaySyncOffsetAtLapTime(
+        replaySyncAnchors,
+        lapTimeSeconds,
+        durationMs / 1000,
+      ) *
+        1000,
+    [durationMs, replaySyncAnchors],
+  )
   const motionRoute = useMemo(
     () =>
       smoothMotion && replay
@@ -357,6 +441,8 @@ export function LapModels({
         guideSurface: grooveProjector,
         curbSurface: curbProjector,
         marginMeters: REPLAY_TRACK_CORRIDOR_MARGIN_METERS,
+        calibrationWhiteLineAllowanceMeters:
+          REPLAY_CALIBRATION_WHITE_LINE_ALLOWANCE_METERS,
         searchMeters: REPLAY_TRACK_CORRIDOR_SEARCH_METERS,
         maximumRoadWidthMeters: REPLAY_TRACK_CORRIDOR_MAX_WIDTH_METERS,
         scanStepMeters: REPLAY_TRACK_CORRIDOR_SCAN_STEP_METERS,
@@ -370,15 +456,15 @@ export function LapModels({
         wheelCenterHalfWheelbaseMeters:
           REPLAY_WHEEL_CENTER_HALF_WHEELBASE_METERS,
         lateralIntentAnchors: racingLineAnchors.map((anchor) => ({
-          routeTimeMs:
-            anchor.lapTimeSeconds * 1000 + REPLAY_START_ROUTE_TIME_MS,
+          routeTimeMs: routeTimeMsAtLapTime(anchor.lapTimeSeconds),
           deltaMeters: anchor.deltaMeters,
         })),
+        authoredLinePoints,
         curbContactWindows: AUDITED_CURB_CONTACTS.map((contact) => ({
-          startRouteTimeMs:
-            contact.startLapTimeSeconds * 1000 + REPLAY_START_ROUTE_TIME_MS,
-          endRouteTimeMs:
-            contact.endLapTimeSeconds * 1000 + REPLAY_START_ROUTE_TIME_MS,
+          startRouteTimeMs: routeTimeMsAtLapTime(
+            contact.startLapTimeSeconds,
+          ),
+          endRouteTimeMs: routeTimeMsAtLapTime(contact.endLapTimeSeconds),
           // Audited contacts name the onboard tire side; use it directly for
           // road-edge and kerb targeting (no model-basis flip).
           side: contact.side,
@@ -396,6 +482,8 @@ export function LapModels({
     driveableProjector,
     grooveProjector,
     motionRoute,
+    routeTimeMsAtLapTime,
+    authoredLinePoints,
     racingLineAnchors,
   ])
 
@@ -417,9 +505,17 @@ export function LapModels({
       }
     ).__sampleCorridor = (lapTimeSeconds: number) =>
       replayRoute.corridorSample?.(
-        lapTimeSeconds * 1000 + REPLAY_START_ROUTE_TIME_MS,
+        routeTimeMsAtLapTime(lapTimeSeconds),
       ) ?? null
-  }, [replayRoute])
+  }, [replayRoute, routeTimeMsAtLapTime])
+
+  useEffect(() => {
+    lastCalibrationSampleLapRef.current = null
+    lastCalibrationSampleOffsetRef.current = null
+    lastCalibrationSampleBoundaryRef.current = null
+    lastCalibrationSampleAuthoredWeightRef.current = null
+    invalidate()
+  }, [invalidate, replayRoute])
 
   // Demand frameloop skips useFrame while paused; scrubbing must invalidate.
   useEffect(() => {
@@ -441,36 +537,217 @@ export function LapModels({
         w.__replayRoute = replayRoute
         w.__sampleCorridor = (lapTimeSeconds: number) =>
           replayRoute.corridorSample?.(
-            lapTimeSeconds * 1000 + REPLAY_START_ROUTE_TIME_MS,
+            routeTimeMsAtLapTime(lapTimeSeconds),
           ) ?? null
       }
     }
 
     const video = videoRef.current
-    const videoLapTimeSeconds = video
-      ? lapTimeFromVideoTime(video.currentTime, lapWindow)
+    const rawVideoLapTimeSeconds = video
+      ? Math.min(
+          lapWindow.lapDurationSeconds + Math.max(0, videoPreviewLeadSeconds),
+          Math.max(
+            -Math.max(0, lapWindow.videoStartSeconds),
+            video.currentTime - lapWindow.videoStartSeconds,
+          ),
+        )
       : playheadSeconds
+    const videoLapTimeSeconds = video
+      ? vehicleLapTimeFromPreviewVideoLapTime(
+          rawVideoLapTimeSeconds,
+          videoPreviewLeadSeconds,
+          lapWindow,
+        )
+      : rawVideoLapTimeSeconds
     const mediaPlaying = Boolean(video && !video.paused && !video.ended)
-    const playbackRate = video?.playbackRate ?? 1
     const frameDelta = Math.min(deltaSeconds, 0.05)
     const playbackClock = playbackClockRef.current
     const pausedTransition =
       previousMediaPlayingRef.current === true && !mediaPlaying
+    const replaySeekState = replaySeekRef?.current
+    const replaySeekEpoch = replaySeekState?.seekEpoch
+    const pendingLapTimeSeconds = replaySeekState?.pendingLapTimeSeconds
+    const hasPendingReplaySeek =
+      typeof replaySeekEpoch === 'number' &&
+      replaySeekEpoch !== previousReplaySeekEpochRef.current
+    const waitingForSeek =
+      hasPendingReplaySeek &&
+      typeof pendingLapTimeSeconds === 'number' &&
+      (Boolean(video?.seeking) ||
+        Math.abs(videoLapTimeSeconds - pendingLapTimeSeconds) > 0.03)
+    const explicitSeek = !waitingForSeek && hasPendingReplaySeek
+    if (explicitSeek) {
+      previousReplaySeekEpochRef.current = replaySeekEpoch
+    }
 
     if (pausedTransition) {
       resetPlaybackClock(playbackClock, videoLapTimeSeconds)
-      resetSmoothedPose(smoothedPoseRef.current)
     }
 
-    const lapTimeSeconds = advancePlaybackClock(playbackClock, {
-      deltaSeconds: frameDelta,
-      videoLapTimeSeconds,
-      isPlaying: mediaPlaying,
-      playbackRate,
-    })
+    if (waitingForSeek) playbackClock.didSeek = false
+    const synchronizedLapTimeSeconds = waitingForSeek
+      ? playbackClock.lapTimeSeconds
+      : advancePlaybackClock(playbackClock, {
+          videoLapTimeSeconds,
+          isPlaying: mediaPlaying,
+          explicitSeek,
+        })
+    const lapTimeSeconds = drivingLineComparisonVehicleTime(
+      synchronizedLapTimeSeconds,
+      lapWindow.lapDurationSeconds,
+      vehicleTimeOffsetSeconds,
+    )
     const didSeek = playbackClock.didSeek
 
-    const routeTimeMs = lapTimeSeconds * 1000 + REPLAY_START_ROUTE_TIME_MS
+    const routeChanged = previousReplayRouteRef.current !== replayRoute
+    if (routeChanged) {
+      previousReplayRouteRef.current = replayRoute
+      lastReplayPoseRef.current = null
+    }
+
+    const routeTimeMs = routeTimeMsAtLapTime(lapTimeSeconds)
+    let corridorSample = replayRoute?.corridorSample?.(routeTimeMs) ?? null
+    const driveInput = calibrationDriveInputRef?.current
+    const driveState = calibrationDriveStateRef.current
+    let driveActive = Boolean(
+      driveInput?.active &&
+      // Starting a take seeks the real onboard ahead by the preview lead. Do
+      // not consume the new drive session until that deliberate seek settles,
+      // or its eventual acknowledgement looks like a mid-take discontinuity
+      // and immediately cancels the recording.
+      !waitingForSeek &&
+      corridorSample &&
+      replayRoute?.sampleProgressAtOffset &&
+      lapTimeSeconds >= 0 &&
+      lapTimeSeconds <= durationMs / 1000,
+    )
+    let routeSampleOverride: ReplayMotionSample | null = null
+    let driveSample: CalibrationDriveSample | null = null
+
+    if (driveActive && driveInput && corridorSample && replayRoute) {
+      let newSession = false
+      if (driveState.sessionId !== driveInput.sessionId) {
+        newSession = true
+        driveState.sessionId = driveInput.sessionId
+        driveState.offsetMeters = Math.min(
+          corridorSample.maximumOffsetMeters,
+          Math.max(
+            corridorSample.minimumOffsetMeters,
+            typeof driveInput.initialOffsetMeters === 'number'
+              ? driveInput.initialOffsetMeters
+              : corridorSample.offsetMeters,
+          ),
+        )
+        driveState.previousFrameProgress = corridorSample.routeProgress
+        driveState.lastCapturedProgress = null
+        driveState.lastCapturedOffset = null
+        driveState.lastDirection = 0
+      }
+
+      const previousProgress = driveState.previousFrameProgress
+      const progressStep =
+        newSession || pausedTransition || previousProgress === null
+          ? 0
+          : forwardProgressDistance(
+              previousProgress,
+              corridorSample.routeProgress,
+            )
+      const discontinuity =
+        !newSession &&
+        !pausedTransition &&
+        (didSeek ||
+          progressStep > CALIBRATION_MAXIMUM_FORWARD_PROGRESS_STEP)
+
+      if (discontinuity) {
+        driveActive = false
+        driveState.previousFrameProgress = null
+        onCalibrationDriveDiscontinuity?.()
+      } else {
+        driveState.previousFrameProgress = corridorSample.routeProgress
+        const travelledMeters =
+          progressStep * corridorSample.curveLengthMeters
+        const requestedOffset =
+          driveState.offsetMeters +
+          driveInput.direction *
+            CALIBRATION_LATERAL_SPEED_METERS_PER_SECOND *
+            frameDelta
+        const maximumLateralChange =
+          REPLAY_TRACK_CORRIDOR_MAX_LATERAL_SLOPE * travelledMeters
+        const slopeLimitedOffset = Math.min(
+          driveState.offsetMeters + maximumLateralChange,
+          Math.max(
+            driveState.offsetMeters - maximumLateralChange,
+            requestedOffset,
+          ),
+        )
+        const liveOffset = Math.min(
+          corridorSample.maximumOffsetMeters,
+          Math.max(corridorSample.minimumOffsetMeters, slopeLimitedOffset),
+        )
+        const boundaryLimited =
+          driveInput.direction !== 0 &&
+          Math.abs(liveOffset - slopeLimitedOffset) > 1e-6
+        driveState.offsetMeters = liveOffset
+        const width =
+          corridorSample.maximumOffsetMeters -
+          corridorSample.minimumOffsetMeters
+        corridorSample = {
+          ...corridorSample,
+          offsetMeters: liveOffset,
+          deltaMeters: liveOffset - corridorSample.guideOffsetMeters,
+          roadFraction:
+            width > 1e-9
+              ? (liveOffset - corridorSample.minimumOffsetMeters) / width
+              : 0.5,
+          boundaryLimited,
+        }
+        routeSampleOverride =
+          replayRoute.sampleProgressAtOffset?.(
+            corridorSample.routeProgress,
+            liveOffset,
+          ) ?? null
+        driveSample = {
+          lapTimeSeconds,
+          routeProgress: corridorSample.routeProgress,
+          offsetMeters: corridorSample.offsetMeters,
+          minimumOffsetMeters: corridorSample.minimumOffsetMeters,
+          maximumOffsetMeters: corridorSample.maximumOffsetMeters,
+          roadFraction: corridorSample.roadFraction,
+          boundaryLimited: corridorSample.boundaryLimited,
+        }
+      }
+    }
+
+    const previewOffset = driveInput?.previewOffsetMeters
+    const previewingCalibrationEntry =
+      !driveActive &&
+      typeof previewOffset === 'number' &&
+      corridorSample !== null &&
+      Boolean(replayRoute?.sampleProgressAtOffset)
+    if (previewingCalibrationEntry && corridorSample && replayRoute) {
+      const offsetMeters = Math.min(
+        corridorSample.maximumOffsetMeters,
+        Math.max(corridorSample.minimumOffsetMeters, previewOffset),
+      )
+      const width =
+        corridorSample.maximumOffsetMeters - corridorSample.minimumOffsetMeters
+      corridorSample = {
+        ...corridorSample,
+        offsetMeters,
+        deltaMeters: offsetMeters - corridorSample.guideOffsetMeters,
+        roadFraction:
+          width > 1e-9
+            ? (offsetMeters - corridorSample.minimumOffsetMeters) / width
+            : 0.5,
+        boundaryLimited: false,
+      }
+      routeSampleOverride =
+        replayRoute.sampleProgressAtOffset?.(
+          corridorSample.routeProgress,
+          offsetMeters,
+        ) ?? null
+    }
+
     const pose = replay
       ? resolveReplayCarPose(
           driveableProjector,
@@ -481,23 +758,23 @@ export function LapModels({
           replayRoute?.corridorDiagnostics ? 0 : REPLAY_LATERAL_NUDGE,
           smoothMotion,
           replayRoute,
+          routeSampleOverride,
         )
       : spawnPose
     if (replay && pose.source === 'replay-location') {
       lastReplayPoseRef.current = pose
     }
 
-    const corridorSample =
-      replayRoute?.corridorSample?.(routeTimeMs) ?? null
-
     const snapPose =
       !smoothMotion ||
       !cameraReadyRef.current ||
-      !mediaPlaying ||
+      routeChanged ||
       didSeek ||
-      pausedTransition
+      pausedTransition ||
+      driveActive ||
+      previewingCalibrationEntry
     const smoothedPose = smoothedPoseRef.current
-    applySmoothedPose(smoothedPose, pose, frameDelta, snapPose)
+    applySmoothedPose(smoothedPose, pose, deltaSeconds, snapPose)
     if (snapPose) {
       cameraReadyRef.current = true
     }
@@ -513,10 +790,19 @@ export function LapModels({
     cameraBasis.up.copy(smoothedPose.up)
 
     const cameraTarget = cameraTargetRef.current.copy(smoothedPose.position)
+    const targetFov = cameraMode === 'onboard' ? onboardRig.fov : CAMERA_FOV
+    if (camera.fov !== targetFov) {
+      camera.fov = targetFov
+      camera.updateProjectionMatrix()
+    }
     if (cameraMode === 'overhead') {
+      const cameraHeight =
+        overheadCameraHeightMeters ??
+        calibrationCameraHeightRef?.current ??
+        OVERHEAD_CAMERA_HEIGHT
       camera.position
         .copy(smoothedPose.position)
-        .addScaledVector(cameraBasis.up, OVERHEAD_CAMERA_HEIGHT)
+        .addScaledVector(cameraBasis.up, cameraHeight)
       cameraTarget.addScaledVector(cameraBasis.forward, CAMERA_TARGET_FORWARD)
       camera.up.copy(cameraBasis.forward)
       camera.lookAt(cameraTarget)
@@ -549,10 +835,6 @@ export function LapModels({
       carRoot.localToWorld(cameraTarget)
       camera.up.set(0, 1, 0).applyQuaternion(carRoot.quaternion).normalize()
       camera.lookAt(cameraTarget)
-      if (camera.fov !== onboardRig.fov) {
-        camera.fov = onboardRig.fov
-        camera.updateProjectionMatrix()
-      }
       if (import.meta.env.DEV) {
         const projectLocal = (x: number, y: number, z: number) => {
           const p = onboardProjectRef.current.set(x, y, z)
@@ -570,7 +852,7 @@ export function LapModels({
               local: number[]
               world: number[]
               target: number[]
-              mode: CameraMode
+              mode: SceneCameraMode
               rig: OnboardCameraRig
               ndc: {
                 halo: [number, number, number]
@@ -611,16 +893,84 @@ export function LapModels({
       corridorSample,
     })
 
+    if (
+      driveActive &&
+      driveInput &&
+      corridorSample &&
+      driveSample &&
+      onCalibrationDriveSample
+    ) {
+      const lastProgress = driveState.lastCapturedProgress
+      const lastOffset = driveState.lastCapturedOffset
+      const movedMeters =
+        lastProgress === null
+          ? Number.POSITIVE_INFINITY
+          : forwardProgressDistance(
+              lastProgress,
+              corridorSample.routeProgress,
+            ) * corridorSample.curveLengthMeters
+      const offsetChange =
+        lastOffset === null
+          ? Number.POSITIVE_INFINITY
+          : Math.abs(corridorSample.offsetMeters - lastOffset)
+      const directionChanged = driveState.lastDirection !== driveInput.direction
+      if (
+        movedMeters >= CALIBRATION_CAPTURE_SPACING_METERS ||
+        offsetChange >= CALIBRATION_CAPTURE_OFFSET_STEP_METERS ||
+        directionChanged
+      ) {
+        driveState.lastCapturedProgress = corridorSample.routeProgress
+        driveState.lastCapturedOffset = corridorSample.offsetMeters
+        driveState.lastDirection = driveInput.direction
+        onCalibrationDriveSample(driveSample)
+      }
+    }
+
+    if (driveActive && driveSample) {
+      onCalibrationDriveFrame?.(driveSample)
+    }
+
+    const sectionEndLapTimeSeconds = driveInput?.sectionEndLapTimeSeconds
+    if (
+      driveInput?.mode &&
+      typeof sectionEndLapTimeSeconds === 'number' &&
+      videoLapTimeSeconds >= sectionEndLapTimeSeconds - 0.001 &&
+      calibrationSectionEndSessionRef.current !== driveInput.sessionId
+    ) {
+      calibrationSectionEndSessionRef.current = driveInput.sessionId
+      onCalibrationSectionEnd?.(driveInput.mode)
+    }
+
     if (onCalibrationSample && corridorSample) {
       const lastSampleLap = lastCalibrationSampleLapRef.current
+      const lastSampleOffset = lastCalibrationSampleOffsetRef.current
+      const lastSampleBoundary = lastCalibrationSampleBoundaryRef.current
+      const lastSampleAuthoredWeight =
+        lastCalibrationSampleAuthoredWeightRef.current
       if (
         lastSampleLap === null ||
+        lastSampleOffset === null ||
+        lastSampleBoundary === null ||
+        lastSampleAuthoredWeight === null ||
         Math.abs(lapTimeSeconds - lastSampleLap) > 0.04 ||
+        Math.abs(corridorSample.offsetMeters - lastSampleOffset) > 0.02 ||
+        corridorSample.boundaryLimited !== lastSampleBoundary ||
+        Math.abs(
+          corridorSample.authoredLineWeight - lastSampleAuthoredWeight,
+        ) > 0.01 ||
         didSeek ||
         pausedTransition
       ) {
         lastCalibrationSampleLapRef.current = lapTimeSeconds
-        onCalibrationSample(corridorSample)
+        lastCalibrationSampleOffsetRef.current = corridorSample.offsetMeters
+        lastCalibrationSampleBoundaryRef.current =
+          corridorSample.boundaryLimited
+        lastCalibrationSampleAuthoredWeightRef.current =
+          corridorSample.authoredLineWeight
+        onCalibrationSample({
+          ...corridorSample,
+          calibrationLapTimeSeconds: lapTimeSeconds,
+        })
       }
     }
 
@@ -630,6 +980,15 @@ export function LapModels({
   return (
     <>
       <primitive object={track} />
+      {replayRoute &&
+      (drivingLinePreviewPath?.length || drivingLinePreviewPoints.length > 0) ? (
+        <DrivingLinePreview
+          route={replayRoute}
+          driveableProjector={driveableProjector}
+          linePoints={drivingLinePreviewPath ?? drivingLinePreviewPoints}
+          marks={drivingLinePreviewPoints}
+        />
+      ) : null}
       <group ref={carRootRef}>
         <primitive object={car} />
       </group>

@@ -1,14 +1,14 @@
-import {
-  PLAYBACK_DRIFT_CORRECTION_SECONDS,
-  PLAYBACK_MAX_DRIFT_SECONDS,
-  PLAYBACK_SEEK_THRESHOLD_SECONDS,
-} from './components/scene/sceneConfig'
-
 export type PlaybackClock = {
   lapTimeSeconds: number
   initialized: boolean
   previousVideoLapTimeSeconds: number | null
   didSeek: boolean
+}
+
+/** Mutable hand-off from an intentional UI seek to the render loop. */
+export type ReplaySeekState = {
+  seekEpoch: number
+  pendingLapTimeSeconds: number | null
 }
 
 export function createPlaybackClock(): PlaybackClock {
@@ -31,45 +31,33 @@ export function resetPlaybackClock(
 }
 
 export type AdvancePlaybackClockOptions = {
-  deltaSeconds: number
   videoLapTimeSeconds: number
   isPlaying: boolean
-  playbackRate?: number
-  seekThresholdSeconds?: number
-  maxDriftSeconds?: number
-  driftCorrectionSeconds?: number
+  /** Set only for an intentional UI/app seek, never for media decode stalls. */
+  explicitSeek?: boolean
 }
 
 /**
  * Advance a monotonic playback clock that stays aligned with video lap time.
  *
- * While playing, the clock advances by frame delta and gently corrects small
- * drift toward the video. Hard snaps occur on explicit seeks or large drift.
- * While paused, the clock follows the video position exactly.
+ * The media timestamp is the source of truth. Decode stalls therefore hold
+ * the 3D pose instead of being misclassified as seeks, and resuming playback
+ * stays exactly aligned with the footage. Only deliberate seeks (or an
+ * unmistakable backwards media seek) hard-snap the clock.
  */
 export function advancePlaybackClock(
   clock: PlaybackClock,
   options: AdvancePlaybackClockOptions,
 ): number {
-  const {
-    deltaSeconds,
-    videoLapTimeSeconds,
-    isPlaying,
-    playbackRate = 1,
-    seekThresholdSeconds = PLAYBACK_SEEK_THRESHOLD_SECONDS,
-    maxDriftSeconds = PLAYBACK_MAX_DRIFT_SECONDS,
-    driftCorrectionSeconds = PLAYBACK_DRIFT_CORRECTION_SECONDS,
-  } = options
+  const { videoLapTimeSeconds, isPlaying, explicitSeek = false } = options
 
   clock.didSeek = false
   const previousVideo = clock.previousVideoLapTimeSeconds
-
-  const videoJump =
+  const videoMovedBackwards =
     previousVideo !== null &&
-    Math.abs(videoLapTimeSeconds - previousVideo) >
-      seekThresholdSeconds + Math.max(0, deltaSeconds * playbackRate * 1.5)
+    videoLapTimeSeconds < previousVideo - 0.05
 
-  if (!clock.initialized || videoJump) {
+  if (!clock.initialized || explicitSeek || videoMovedBackwards) {
     resetPlaybackClock(clock, videoLapTimeSeconds)
     clock.didSeek = true
     return clock.lapTimeSeconds
@@ -81,17 +69,10 @@ export function advancePlaybackClock(
     return clock.lapTimeSeconds
   }
 
-  clock.lapTimeSeconds += deltaSeconds * playbackRate
-  const drift = videoLapTimeSeconds - clock.lapTimeSeconds
-
-  if (Math.abs(drift) > maxDriftSeconds) {
-    clock.lapTimeSeconds = videoLapTimeSeconds
-    clock.didSeek = true
-  } else if (Math.abs(drift) > 1e-6 && driftCorrectionSeconds > 0) {
-    const correctionAlpha =
-      1 - Math.exp(-deltaSeconds / driftCorrectionSeconds)
-    clock.lapTimeSeconds += drift * correctionAlpha
-  }
+  clock.lapTimeSeconds = Math.max(
+    clock.lapTimeSeconds,
+    videoLapTimeSeconds,
+  )
 
   clock.previousVideoLapTimeSeconds = videoLapTimeSeconds
   return clock.lapTimeSeconds

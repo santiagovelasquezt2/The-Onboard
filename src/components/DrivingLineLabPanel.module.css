@@ -1,0 +1,400 @@
+.panel {
+  position: fixed;
+  top: calc(var(--nav-h) + 16px);
+  right: 16px;
+  z-index: 5;
+  width: 310px;
+  max-height: calc(100dvh - var(--nav-h) - var(--playhead-h) - 32px);
+  overflow-y: auto;
+  padding: 15px;
+  border: 1px solid rgb(64 232 112 / 24%);
+  border-radius: 10px;
+  background: rgb(18 22 25 / 96%);
+  box-shadow: 0 18px 60px rgb(0 0 0 / 40%);
+  color: #e9eeea;
+  contain: layout paint;
+}
+
+.panel:focus-visible {
+  outline: 2px solid #40e870;
+  outline-offset: -2px;
+}
+
+.heading,
+.labelRow,
+.ends,
+.fieldRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.heading {
+  align-items: flex-start;
+}
+
+.eyebrow,
+.isolation,
+.boundary,
+.controlHint,
+.contactHint,
+.saveStatus {
+  margin: 0;
+}
+
+.eyebrow {
+  color: #72d891;
+  font: 600 9px/1.2 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.heading h1 {
+  margin: 5px 0 0;
+  font: 650 18px/1.1 var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+.markCount {
+  flex: none;
+  padding: 5px 8px;
+  border: 1px solid rgb(64 232 112 / 34%);
+  border-radius: 999px;
+  background: rgb(45 136 70 / 20%);
+  color: #baf8cb;
+  font: 600 9px/1 var(--font-mono);
+  text-transform: uppercase;
+}
+
+.isolation {
+  margin-top: 11px;
+  color: #aeb8b0;
+  font: 10px/1.45 var(--font-mono);
+}
+
+.fieldRow,
+.contactBoard,
+.progressBlock,
+.positionBlock,
+.surfaceBlock,
+.viewBlock,
+.exportActions {
+  margin-top: 15px;
+}
+
+.contactGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.panel .contactSlot {
+  position: relative;
+  min-height: 27px;
+  padding: 3px 2px;
+  border-color: rgb(255 255 255 / 10%);
+  border-radius: 4px;
+  background: rgb(255 255 255 / 4%);
+  color: #7d8880;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel .contactSlot[data-marked='true'] {
+  color: #f4f7f4;
+}
+
+.panel .contactSlot[data-marked='true']::after {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentcolor;
+  content: '';
+}
+
+.panel .contactSlot[data-surface='white-line'] {
+  border-color: rgb(224 234 226 / 55%);
+  background: rgb(224 234 226 / 12%);
+  color: #e0eae2;
+}
+
+.panel .contactSlot[data-surface='curb'] {
+  border-color: rgb(239 106 92 / 68%);
+  background: rgb(172 54 43 / 25%);
+  color: #ffafa6;
+}
+
+.panel .contactSlot[data-surface='ref-point'] {
+  border-color: rgb(101 199 255 / 68%);
+  background: rgb(36 105 145 / 28%);
+  color: #a7dcff;
+}
+
+.panel .contactSlot[data-active='true'] {
+  box-shadow:
+    0 0 0 1px #40e870,
+    inset 0 0 0 1px rgb(64 232 112 / 42%);
+}
+
+.panel .contactSlot[data-active='true']:not([data-marked='true']) {
+  border-color: #40e870;
+  background: rgb(29 142 66 / 30%);
+  color: #d4fadd;
+}
+
+.contactLegend {
+  display: flex;
+  gap: 12px;
+  margin-top: 7px;
+  color: #78827b;
+  font: 8px/1.2 var(--font-mono);
+  text-transform: uppercase;
+}
+
+.contactHint {
+  margin-top: 7px;
+  color: #8f9992;
+  font: 9px/1.4 var(--font-mono);
+}
+
+.contactLegend span::before {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: #e0eae2;
+  content: '';
+  vertical-align: 1px;
+}
+
+.contactLegend span[data-surface='curb']::before {
+  background: #ef6a5c;
+}
+
+.contactLegend span[data-surface='ref-point']::before {
+  background: #65c7ff;
+}
+
+.boardActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.panel .boardActions button {
+  min-height: 28px;
+  padding: 5px 6px;
+  font-size: 8px;
+}
+
+.fieldRow label,
+.labelRow,
+.ends {
+  color: #8f9992;
+  font: 600 10px/1.2 var(--font-mono);
+}
+
+.fieldRow select {
+  min-width: 150px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: #242a2d;
+}
+
+.labelRow strong {
+  color: #f0f4f1;
+}
+
+.progressTrack,
+.positionTrack {
+  position: relative;
+  height: 5px;
+  margin: 9px 0 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 14%);
+}
+
+.progressTrack span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #19833d, #40e870);
+  box-shadow: 0 0 12px rgb(64 232 112 / 36%);
+  transform-origin: left center;
+}
+
+.positionTrack {
+  height: 3px;
+  overflow: visible;
+}
+
+.positionTrack span {
+  position: absolute;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #171b1d;
+  border-radius: 50%;
+  background: #40e870;
+  transform: translate(-50%, -50%);
+}
+
+.ends {
+  color: #69736c;
+  font-size: 9px;
+}
+
+.boundary {
+  margin-top: 7px;
+  color: #f0baad;
+  font: 600 9px/1.2 var(--font-mono);
+  text-transform: uppercase;
+}
+
+.driveControls,
+.segmented,
+.exportActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.driveControls {
+  margin-top: 16px;
+}
+
+.panel button {
+  min-height: 34px;
+  border: 1px solid rgb(255 255 255 / 13%);
+  border-radius: 6px;
+  padding: 7px 9px;
+  background: #272d30;
+  color: #e5ebe6;
+  font: 600 10px/1.2 var(--font-mono);
+}
+
+.panel button:hover:not(:disabled) {
+  border-color: rgb(64 232 112 / 45%);
+  background: #30383a;
+}
+
+.panel button:focus-visible,
+.panel select:focus-visible,
+.panel input:focus-visible {
+  outline: 2px solid #40e870;
+  outline-offset: 2px;
+}
+
+.panel button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.controlHint,
+.saveStatus {
+  margin-top: 8px;
+  color: #8f9992;
+  font: 9px/1.45 var(--font-mono);
+}
+
+.segmented {
+  margin-top: 9px;
+}
+
+.surfaceBlock .segmented {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.segmented button[aria-pressed='true'] {
+  border-color: rgb(64 232 112 / 64%);
+  background: rgb(31 111 54 / 55%);
+  color: #c7fbd5;
+}
+
+.panel .primary,
+.panel .save,
+.panel .quiet {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.panel .primary {
+  margin-top: 13px;
+  border-color: #40e870;
+  background: #1d8e42;
+  color: #06170b;
+  font-weight: 750;
+}
+
+.panel .quiet {
+  background: transparent;
+}
+
+.viewBlock input[type='range'] {
+  width: 100%;
+  margin: 7px 0 3px;
+  accent-color: #40e870;
+}
+
+.cameraDistanceLabel {
+  margin-top: 12px;
+}
+
+.timingLabel {
+  margin-top: 14px;
+}
+
+.timingActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.panel .timingReset {
+  width: auto;
+  min-height: 0;
+  margin-top: 5px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #9eaaa1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.panel .timingReset:hover:not(:disabled) {
+  border: 0;
+  background: transparent;
+  color: #c8d2ca;
+}
+
+.exportActions .save,
+.exportActions .quiet {
+  margin-top: 0;
+}
+
+.saveStatus {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .panel {
+    top: auto;
+    right: 10px;
+    bottom: calc(var(--playhead-h) + 10px);
+    left: 10px;
+    width: auto;
+    max-height: 46dvh;
+  }
+}

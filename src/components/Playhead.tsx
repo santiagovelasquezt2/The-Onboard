@@ -4,6 +4,7 @@ import styles from './Playhead.module.css'
 type PlayheadProps = {
   playing: boolean
   disabled?: boolean
+  scrubDisabled?: boolean
   playheadSeconds: number
   startSeconds: number
   durationSeconds: number
@@ -13,7 +14,7 @@ type PlayheadProps = {
   onPlaybackRateChange: (rate: number) => void
 }
 
-const PLAYBACK_RATES = [0.5, 1, 1.5, 2]
+const PLAYBACK_RATES = [0.1, 0.2, 0.25, 0.33, 0.5, 0.75, 1, 1.25, 1.5, 2]
 
 function formatTime(seconds: number) {
   const absolute = Math.abs(seconds)
@@ -27,6 +28,7 @@ function formatTime(seconds: number) {
 export function Playhead({
   playing,
   disabled = false,
+  scrubDisabled = false,
   playheadSeconds,
   startSeconds,
   durationSeconds,
@@ -70,7 +72,7 @@ export function Playhead({
         onChange={(e) => onScrub(Number(e.target.value))}
         aria-label="Scrub playhead"
         style={{ '--progress': progress } as CSSProperties}
-        disabled={disabled}
+        disabled={disabled || scrubDisabled}
       />
 
       <div className={styles.time} aria-live="polite">

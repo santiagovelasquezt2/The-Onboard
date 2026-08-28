@@ -4,12 +4,20 @@ import { Environment, Lightformer, Sky, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import styles from './TrackScene.module.css'
 import { AssetErrorBoundary } from './scene/AssetErrorBoundary'
-import { LapModels } from './scene/LapModels'
+import { LapModels, type SceneCameraMode } from './scene/LapModels'
 import { CAR_URL, TRACK_URL } from './scene/urls'
 import type { ReplayFile } from '../replay'
 import type { LapWindow } from '../lapWindow'
 import type { RacingLineAnchor } from '../racingLineCalibration'
+import type {
+  AuthoredLinePoint,
+  CalibrationDriveInput,
+  CalibrationDriveSample,
+} from '../authoredRacingLine'
+import type { ReplaySyncAnchor } from '../replaySyncCalibration'
+import type { ReplaySeekState } from '../playbackClock'
 import type { ReplayCorridorSample } from './scene/replayMotion'
+import type { DrivingLinePreviewPoint } from './scene/DrivingLinePreview'
 import {
   AMBIENT_INTENSITY,
   CAMERA_FAR,
@@ -39,7 +47,24 @@ type TrackSceneProps = {
   videoRef: RefObject<HTMLVideoElement | null>
   lapWindow: LapWindow
   racingLineAnchors: readonly RacingLineAnchor[]
+  authoredLinePoints: readonly AuthoredLinePoint[]
+  drivingLinePreviewPath?: readonly AuthoredLinePoint[]
+  drivingLinePreviewPoints?: readonly DrivingLinePreviewPoint[]
+  replaySyncAnchors: readonly ReplaySyncAnchor[]
+  replaySeekRef?: RefObject<ReplaySeekState>
+  /** Visible onboard is ahead during a manual calibration recording only. */
+  videoPreviewLeadSeconds?: number
+  /** Visual route-time correction used to align the 3D car with the footage. */
+  vehicleTimeOffsetSeconds?: number
+  cameraModeOverride?: SceneCameraMode
+  overheadCameraHeightMeters?: number
+  calibrationDriveInputRef?: RefObject<CalibrationDriveInput>
+  calibrationCameraHeightRef?: RefObject<number>
   onCalibrationSample?: (sample: ReplayCorridorSample) => void
+  onCalibrationDriveSample?: (sample: CalibrationDriveSample) => void
+  onCalibrationDriveFrame?: (sample: CalibrationDriveSample) => void
+  onCalibrationDriveDiscontinuity?: () => void
+  onCalibrationSectionEnd?: (mode: 'record' | 'review') => void
 }
 
 const SUN_POSITION: [number, number, number] = [...SUN_DIRECTION]
@@ -166,7 +191,22 @@ export function TrackScene({
   videoRef,
   lapWindow,
   racingLineAnchors,
+  authoredLinePoints,
+  drivingLinePreviewPath,
+  drivingLinePreviewPoints,
+  replaySyncAnchors,
+  replaySeekRef,
+  videoPreviewLeadSeconds,
+  vehicleTimeOffsetSeconds,
+  cameraModeOverride,
+  overheadCameraHeightMeters,
+  calibrationDriveInputRef,
+  calibrationCameraHeightRef,
   onCalibrationSample,
+  onCalibrationDriveSample,
+  onCalibrationDriveFrame,
+  onCalibrationDriveDiscontinuity,
+  onCalibrationSectionEnd,
 }: TrackSceneProps) {
   return (
     <div className={styles.canvasWrap}>
@@ -201,7 +241,24 @@ export function TrackScene({
               videoRef={videoRef}
               lapWindow={lapWindow}
               racingLineAnchors={racingLineAnchors}
+              authoredLinePoints={authoredLinePoints}
+              drivingLinePreviewPath={drivingLinePreviewPath}
+              drivingLinePreviewPoints={drivingLinePreviewPoints}
+              replaySyncAnchors={replaySyncAnchors}
+              replaySeekRef={replaySeekRef}
+              videoPreviewLeadSeconds={videoPreviewLeadSeconds}
+              vehicleTimeOffsetSeconds={vehicleTimeOffsetSeconds}
+              cameraModeOverride={cameraModeOverride}
+              overheadCameraHeightMeters={overheadCameraHeightMeters}
+              calibrationDriveInputRef={calibrationDriveInputRef}
+              calibrationCameraHeightRef={calibrationCameraHeightRef}
               onCalibrationSample={onCalibrationSample}
+              onCalibrationDriveSample={onCalibrationDriveSample}
+              onCalibrationDriveFrame={onCalibrationDriveFrame}
+              onCalibrationDriveDiscontinuity={
+                onCalibrationDriveDiscontinuity
+              }
+              onCalibrationSectionEnd={onCalibrationSectionEnd}
             />
           </Suspense>
         </Canvas>

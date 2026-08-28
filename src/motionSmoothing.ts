@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { criticallyDampedStep } from './criticalDamping'
 import {
   CAR_ORIENTATION_RESPONSE_SECONDS,
   CAMERA_HEADING_RESPONSE_SECONDS,
@@ -58,20 +59,13 @@ export function criticallyDampedScalar(
   deltaSeconds: number,
   responseSeconds: number,
 ): { value: number; velocity: number } {
-  if (responseSeconds <= 0 || deltaSeconds <= 0) {
-    return { value: target, velocity: 0 }
-  }
-
-  const omega = 2 / responseSeconds
-  const displacement = current - target
-  const damping = 2 * omega
-  const spring = omega * omega
-  const acceleration = -spring * displacement - damping * velocity
-  const nextVelocity = velocity + acceleration * deltaSeconds
-  return {
-    value: current + nextVelocity * deltaSeconds,
-    velocity: nextVelocity,
-  }
+  return criticallyDampedStep(
+    current,
+    target,
+    velocity,
+    deltaSeconds,
+    responseSeconds,
+  )
 }
 
 /**
@@ -85,29 +79,39 @@ export function criticallyDampedVector(
   responseSeconds: number,
   out: THREE.Vector3 = current,
 ): THREE.Vector3 {
-  if (responseSeconds <= 0 || deltaSeconds <= 0) {
+  if (
+    responseSeconds <= 0 ||
+    deltaSeconds <= 0 ||
+    !Number.isFinite(deltaSeconds)
+  ) {
     velocity.set(0, 0, 0)
     return out.copy(target)
   }
 
-  const omega = 2 / responseSeconds
-  const x = current.x - target.x
-  const y = current.y - target.y
-  const z = current.z - target.z
-  const damping = 2 * omega
-  const spring = omega * omega
+  const x = criticallyDampedStep(
+    current.x,
+    target.x,
+    velocity.x,
+    deltaSeconds,
+    responseSeconds,
+  )
+  const y = criticallyDampedStep(
+    current.y,
+    target.y,
+    velocity.y,
+    deltaSeconds,
+    responseSeconds,
+  )
+  const z = criticallyDampedStep(
+    current.z,
+    target.z,
+    velocity.z,
+    deltaSeconds,
+    responseSeconds,
+  )
 
-  const accelerationX = -spring * x - damping * velocity.x
-  const accelerationY = -spring * y - damping * velocity.y
-  const accelerationZ = -spring * z - damping * velocity.z
-
-  velocity.x += accelerationX * deltaSeconds
-  velocity.y += accelerationY * deltaSeconds
-  velocity.z += accelerationZ * deltaSeconds
-
-  out.x = current.x + velocity.x * deltaSeconds
-  out.y = current.y + velocity.y * deltaSeconds
-  out.z = current.z + velocity.z * deltaSeconds
+  out.set(x.value, y.value, z.value)
+  velocity.set(x.velocity, y.velocity, z.velocity)
   return out
 }
 
@@ -160,7 +164,10 @@ export function applySmoothedPose(
     upResponseSeconds = CAMERA_UP_RESPONSE_SECONDS,
   } = options
 
-  const frameDelta = Math.min(deltaSeconds, 0.05)
+  // The critically damped step is analytic, so it remains stable on a slow
+  // Chrome frame. Use the real elapsed time to stay with the video rather
+  // than artificially making the 3D car catch up over later frames.
+  const frameDelta = Math.max(0, deltaSeconds)
 
   if (snap || !state.initialized) {
     snapSmoothedPose(state, target)

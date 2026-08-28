@@ -6,9 +6,8 @@
   height: 100%;
   padding: 0 14px;
   border-top: 1px solid color-mix(in srgb, white 12%, transparent);
-  background: color-mix(in srgb, #101217 86%, transparent);
+  background: #101217;
   box-shadow: 0 -10px 30px rgb(0 0 0 / 18%);
-  backdrop-filter: blur(14px) saturate(120%);
 }
 
 .play {

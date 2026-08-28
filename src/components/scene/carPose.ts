@@ -18,7 +18,7 @@ import {
   interpolateSmoothedLocation,
   openF1ToTrackPlane,
 } from './replayCalibration'
-import type { ReplayMotionRoute } from './replayMotion'
+import type { ReplayMotionRoute, ReplayMotionSample } from './replayMotion'
 
 export type CarPose = {
   position: THREE.Vector3
@@ -575,9 +575,12 @@ export function resolveReplayCarPose(
   lateralNudge = 0,
   smoothMotion = false,
   motionRoute: ReplayMotionRoute | null = null,
+  routeSampleOverride: ReplayMotionSample | null = null,
 ): CarPose {
   const linearLocation = interpolateLocation(samples, tMs, durationMs)
-  const routeSample = smoothMotion ? motionRoute?.sample(tMs) : null
+  const routeSample = smoothMotion
+    ? routeSampleOverride ?? motionRoute?.sample(tMs)
+    : null
   const current =
     smoothMotion && !routeSample
       ? interpolateSmoothedLocation(samples, tMs, durationMs)

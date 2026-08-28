@@ -102,6 +102,13 @@ export const REPLAY_TRACK_CORRIDOR_ENABLED = true
 /** Half the 2.01 m W14 width plus 49.5 cm for curved-footprint tolerance. */
 export const REPLAY_TRACK_CORRIDOR_MARGIN_METERS = 1.5
 
+/**
+ * Manual-only distance the car centre may pass a white line. It is capped so
+ * the opposite wheel pair still stays inside by `REPLAY_WHITE_LINE_TIRE_INSET_METERS`.
+ * The automatic replay line keeps the full safety margin.
+ */
+export const REPLAY_CALIBRATION_WHITE_LINE_ALLOWANCE_METERS = 0.65
+
 /** Maximum lateral search from the transformed OpenF1 route, metres. */
 export const REPLAY_TRACK_CORRIDOR_SEARCH_METERS = 24
 

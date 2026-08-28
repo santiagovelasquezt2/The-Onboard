@@ -8,7 +8,6 @@ import {
 } from 'react'
 import styles from './OnboardVideo.module.css'
 import {
-  lapTimeFromVideoTime,
   lapTimelineStartSeconds,
   videoLapEndSeconds,
   type LapWindow,
@@ -23,6 +22,8 @@ type OnboardVideoProps = {
   onLapTimeUpdate: (seconds: number) => void
   onPlayState: (playing: boolean) => void
   onSourceReady: (ready: boolean) => void
+  /** Optional source-video tail used when the visible onboard leads the car. */
+  timelineEndExtensionSeconds?: number
 }
 
 export const OnboardVideo = forwardRef<HTMLVideoElement | null, OnboardVideoProps>(
@@ -34,21 +35,67 @@ export const OnboardVideo = forwardRef<HTMLVideoElement | null, OnboardVideoProp
       onLapTimeUpdate,
       onPlayState,
       onSourceReady,
+      timelineEndExtensionSeconds = 0,
     },
     ref,
   ) {
     const videoRef = useRef<HTMLVideoElement | null>(null)
     const [failureMessage, setFailureMessage] = useState<string | null>(null)
-    const lapEndSeconds = videoLapEndSeconds(lapWindow)
+    const timelineEndExtension = Math.max(
+      0,
+      Number.isFinite(timelineEndExtensionSeconds)
+        ? timelineEndExtensionSeconds
+        : 0,
+    )
+    const extendedLapEndTime =
+      lapWindow.lapDurationSeconds + timelineEndExtension
+    const lapEndSeconds = videoLapEndSeconds(lapWindow) + timelineEndExtension
 
     useImperativeHandle(ref, () => videoRef.current as HTMLVideoElement)
+
+    const confirmSourceReady = useCallback(
+      (video: HTMLVideoElement) => {
+        const validWindow =
+          Number.isFinite(video.duration) &&
+          lapWindow.videoStartSeconds >= 0 &&
+          lapWindow.lapDurationSeconds > 0 &&
+          video.duration >= lapEndSeconds
+        if (!validWindow) {
+          console.error(
+            '[onboard] source video is shorter than the configured lap window',
+          )
+          setFailureMessage(
+            'This video does not contain the configured timed-lap window.',
+          )
+          onSourceReady(false)
+          return
+        }
+
+        // Keep the source's turn-13 run-up. Only reset on first ready / HMR —
+        // do not re-seek to 0 on every metadata event once playing.
+        if (!Number.isFinite(video.currentTime) || video.currentTime < 0.001) {
+          video.currentTime = 0
+          onLapTimeUpdate(lapTimelineStartSeconds(lapWindow))
+        }
+        onSourceReady(true)
+      },
+      [lapEndSeconds, lapWindow, onLapTimeUpdate, onSourceReady],
+    )
 
     const bindVideo = useCallback(
       (node: HTMLVideoElement | null) => {
         videoRef.current = node
-        if (!node) onSourceReady(false)
+        if (!node) {
+          onSourceReady(false)
+          return
+        }
+        // StrictMode can detach and reattach an already-cached media node
+        // after `loadedmetadata` fired. Restore readiness from the node itself.
+        if (node.readyState >= HTMLMediaElement.HAVE_METADATA) {
+          confirmSourceReady(node)
+        }
       },
-      [onSourceReady],
+      [confirmSourceReady, onSourceReady],
     )
 
     useEffect(() => {
@@ -67,28 +114,69 @@ export const OnboardVideo = forwardRef<HTMLVideoElement | null, OnboardVideoProp
       if (video) video.playbackRate = playbackRate
     }, [playbackRate])
 
+    const stopAtLapEnd = useCallback(
+      (video: HTMLVideoElement) => {
+        if (video.currentTime < lapEndSeconds) return false
+
+        if (video.currentTime > lapEndSeconds) video.currentTime = lapEndSeconds
+        onLapTimeUpdate(extendedLapEndTime)
+        if (!video.paused) video.pause()
+        return true
+      },
+      [extendedLapEndTime, lapEndSeconds, onLapTimeUpdate],
+    )
+
     const updateLapTime = useCallback(
       (video: HTMLVideoElement) => {
-        const lapTime = lapTimeFromVideoTime(video.currentTime, lapWindow)
+        if (stopAtLapEnd(video)) return
 
-        // Only clamp when playing forward past the end — never yank currentTime
-        // backward by more than a tiny epsilon (repeated assigns stutter).
-        if (video.currentTime > lapEndSeconds + 0.05) {
-          video.currentTime = lapEndSeconds
-          onLapTimeUpdate(lapWindow.lapDurationSeconds)
-          if (!video.paused) video.pause()
-          return
-        }
-        if (video.currentTime >= lapEndSeconds) {
-          onLapTimeUpdate(lapWindow.lapDurationSeconds)
-          if (!video.paused) video.pause()
-          return
-        }
-
-        onLapTimeUpdate(lapTime)
+        const sourceLapTime = video.currentTime - lapWindow.videoStartSeconds
+        const timelineStart = -Math.max(0, lapWindow.videoStartSeconds)
+        onLapTimeUpdate(
+          Math.min(
+            extendedLapEndTime,
+            Math.max(timelineStart, sourceLapTime),
+          ),
+        )
       },
-      [lapEndSeconds, lapWindow, onLapTimeUpdate],
+      [extendedLapEndTime, lapWindow.videoStartSeconds, onLapTimeUpdate, stopAtLapEnd],
     )
+
+    useEffect(() => {
+      const video = videoRef.current
+      if (!video) return
+
+      let videoFrameCallbackId: number | null = null
+      let animationFrameId: number | null = null
+
+      const checkBoundary = () => {
+        videoFrameCallbackId = null
+        animationFrameId = null
+        if (stopAtLapEnd(video) || video.paused || video.ended) return
+        scheduleBoundaryCheck()
+      }
+      const scheduleBoundaryCheck = () => {
+        if (videoFrameCallbackId !== null || animationFrameId !== null) return
+        if (typeof video.requestVideoFrameCallback === 'function') {
+          videoFrameCallbackId = video.requestVideoFrameCallback(checkBoundary)
+        } else {
+          animationFrameId = window.requestAnimationFrame(checkBoundary)
+        }
+      }
+      const handlePlay = () => scheduleBoundaryCheck()
+
+      video.addEventListener('play', handlePlay)
+      if (!video.paused) scheduleBoundaryCheck()
+      return () => {
+        video.removeEventListener('play', handlePlay)
+        if (videoFrameCallbackId !== null) {
+          video.cancelVideoFrameCallback(videoFrameCallbackId)
+        }
+        if (animationFrameId !== null) {
+          window.cancelAnimationFrame(animationFrameId)
+        }
+      }
+    }, [stopAtLapEnd])
 
     if (failureMessage) {
       return (
@@ -115,38 +203,16 @@ export const OnboardVideo = forwardRef<HTMLVideoElement | null, OnboardVideoProp
           src={VIDEO_SRC}
           playsInline
           preload="metadata"
-          onLoadedMetadata={(e) => {
-            const video = e.currentTarget
-            const validWindow =
-              Number.isFinite(video.duration) &&
-              lapWindow.videoStartSeconds >= 0 &&
-              lapWindow.lapDurationSeconds > 0 &&
-              video.duration >= lapEndSeconds
-            if (!validWindow) {
-              console.error(
-                '[onboard] source video is shorter than the configured lap window',
-              )
-              setFailureMessage(
-                'This video does not contain the configured timed-lap window.',
-              )
-              onSourceReady(false)
-              return
-            }
-
-            // Keep the source's turn-13 run-up. Only reset on first ready /
-            // HMR — do not re-seek to 0 on every metadata event once playing.
-            if (!Number.isFinite(video.currentTime) || video.currentTime < 0.001) {
-              video.currentTime = 0
-              onLapTimeUpdate(lapTimelineStartSeconds(lapWindow))
-            }
-            onSourceReady(true)
-          }}
+          onLoadedMetadata={(event) => confirmSourceReady(event.currentTarget)}
           onTimeUpdate={(e) => updateLapTime(e.currentTarget)}
           onSeeked={(e) => {
             updateLapTime(e.currentTarget)
           }}
           onPlay={() => onPlayState(true)}
-          onPause={() => onPlayState(false)}
+          onPause={(event) => {
+            updateLapTime(event.currentTarget)
+            onPlayState(false)
+          }}
           onEnded={() => onPlayState(false)}
           onError={() => {
             setFailureMessage('Place footage at /media/onboard.mp4')

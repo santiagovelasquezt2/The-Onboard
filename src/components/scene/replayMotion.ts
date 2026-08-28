@@ -1,4 +1,12 @@
 import * as THREE from 'three'
+import {
+  createAuthoredLineSampler,
+  type AuthoredLinePoint,
+} from '../../authoredRacingLine'
+import {
+  expandManualCalibrationBounds,
+  twoWheelOutsideWhiteLineAllowance,
+} from '../../calibrationCorridor'
 import type { ReplayCarSample, ReplayLocationSample } from '../../replay'
 import type { AsphaltProjector } from './carPose'
 import { interpolateLocation, openF1ToTrackPlane } from './replayCalibration'
@@ -23,11 +31,18 @@ export type ReplayMotionRoute = {
   anchorRouteProgress: number
   sample: (tMs: number) => ReplayMotionSample
   sampleProgress: (routeProgress: number) => ReplayMotionSample
+  sampleProgressAtOffset?: (
+    routeProgress: number,
+    offsetMeters: number,
+  ) => ReplayMotionSample
   corridorDiagnostics?: ReplayCorridorDiagnostics
   corridorSample?: (tMs: number) => ReplayCorridorSample
 }
 
 export type ReplayCorridorSample = {
+  /** Present for live calibration callbacks; route construction itself is time-free. */
+  calibrationLapTimeSeconds?: number
+  curveLengthMeters: number
   routeProgress: number
   minimumOffsetMeters: number
   maximumOffsetMeters: number
@@ -36,6 +51,8 @@ export type ReplayCorridorSample = {
   deltaMeters: number
   manualDeltaMeters: number
   roadFraction: number
+  authoredLineWeight: number
+  boundaryLimited: boolean
   curbSide: ReplayCurbSide | null
   curbLabel: string | null
   curbWeight: number
@@ -76,6 +93,8 @@ export type ReplayTrackCorridorOptions = {
   guideSurface?: AsphaltProjector | null
   curbSurface?: AsphaltProjector | null
   marginMeters: number
+  /** Extra manual-only range, capped by the modeled corridor safety margin. */
+  calibrationWhiteLineAllowanceMeters?: number
   searchMeters: number
   maximumRoadWidthMeters: number
   scanStepMeters: number
@@ -88,6 +107,7 @@ export type ReplayTrackCorridorOptions = {
   wheelCenterHalfTrackMeters?: number
   wheelCenterHalfWheelbaseMeters?: number
   lateralIntentAnchors?: readonly ReplayLateralIntentAnchor[]
+  authoredLinePoints?: readonly AuthoredLinePoint[]
   curbContactWindows?: readonly ReplayCurbContactWindow[]
 }
 
@@ -341,6 +361,8 @@ type CachedCorridorGeometry = {
   guideSurface: AsphaltProjector | null
   curbSurface: AsphaltProjector | null
   signature: string
+  driveableMinimumOffsets: Float64Array<ArrayBuffer>
+  driveableMaximumOffsets: Float64Array<ArrayBuffer>
   minimumOffsets: Float64Array<ArrayBuffer>
   maximumOffsets: Float64Array<ArrayBuffer>
   guideOffsets: Float64Array<ArrayBuffer>
@@ -566,6 +588,7 @@ export function createTrackBoundReplayMotionRoute(
     guideSurface = null,
     curbSurface = null,
     marginMeters,
+    calibrationWhiteLineAllowanceMeters = 0,
     searchMeters,
     maximumRoadWidthMeters,
     scanStepMeters,
@@ -577,6 +600,7 @@ export function createTrackBoundReplayMotionRoute(
     wheelCenterHalfTrackMeters = 0.82,
     wheelCenterHalfWheelbaseMeters = 1.8,
     lateralIntentAnchors = [],
+    authoredLinePoints = [],
     curbContactWindows = [],
   } = options
   const sampleCount = Math.max(
@@ -585,6 +609,8 @@ export function createTrackBoundReplayMotionRoute(
   )
   let minimumOffsets = new Float64Array(sampleCount)
   let maximumOffsets = new Float64Array(sampleCount)
+  let driveableMinimumOffsets = new Float64Array(sampleCount)
+  let driveableMaximumOffsets = new Float64Array(sampleCount)
   let guideOffsets = new Float64Array(sampleCount)
   let leftCurbOffsets = new Float64Array(sampleCount).fill(Number.NaN)
   let rightCurbOffsets = new Float64Array(sampleCount).fill(Number.NaN)
@@ -623,6 +649,8 @@ export function createTrackBoundReplayMotionRoute(
     cachedGeometry.signature === geometrySignature,
   )
   if (cachedGeometry && hasCachedGeometry) {
+    driveableMinimumOffsets = cachedGeometry.driveableMinimumOffsets
+    driveableMaximumOffsets = cachedGeometry.driveableMaximumOffsets
     minimumOffsets = cachedGeometry.minimumOffsets
     maximumOffsets = cachedGeometry.maximumOffsets
     guideOffsets = cachedGeometry.guideOffsets
@@ -881,6 +909,8 @@ export function createTrackBoundReplayMotionRoute(
           const rawWidth = interval.maximum - interval.minimum
           if (rawWidth <= maximumRoadWidthMeters) {
             return {
+              driveableMinimum: interval.minimum,
+              driveableMaximum: interval.maximum,
               minimum: interval.minimum + marginMeters,
               maximum: interval.maximum - marginMeters,
             }
@@ -891,9 +921,13 @@ export function createTrackBoundReplayMotionRoute(
             interval.minimum + halfWidth,
             interval.maximum - halfWidth,
           )
+          const driveableMinimum = cappedCenter - halfWidth
+          const driveableMaximum = cappedCenter + halfWidth
           return {
-            minimum: cappedCenter - halfWidth + marginMeters,
-            maximum: cappedCenter + halfWidth - marginMeters,
+            driveableMinimum,
+            driveableMaximum,
+            minimum: driveableMinimum + marginMeters,
+            maximum: driveableMaximum - marginMeters,
           }
         })
         .filter((interval) => interval.maximum >= interval.minimum)
@@ -908,12 +942,16 @@ export function createTrackBoundReplayMotionRoute(
       const chosen = viable[0]
       if (!chosen) {
         missingCrossSectionCount += 1
+        driveableMinimumOffsets[index] = desiredLateralOffsetMeters
+        driveableMaximumOffsets[index] = desiredLateralOffsetMeters
         minimumOffsets[index] = desiredLateralOffsetMeters
         maximumOffsets[index] = desiredLateralOffsetMeters
         guideOffsets[index] = desiredLateralOffsetMeters
         continue
       }
       hasCrossSection[index] = 1
+      driveableMinimumOffsets[index] = chosen.driveableMinimum
+      driveableMaximumOffsets[index] = chosen.driveableMaximum
       minimumOffsets[index] = chosen.minimum
       maximumOffsets[index] = chosen.maximum
       guideOffsets[index] = clamp(guideTarget, chosen.minimum, chosen.maximum)
@@ -964,6 +1002,8 @@ export function createTrackBoundReplayMotionRoute(
               ? next
               : -1
           if (source < 0) continue
+          driveableMinimumOffsets[index] = driveableMinimumOffsets[source]
+          driveableMaximumOffsets[index] = driveableMaximumOffsets[source]
           minimumOffsets[index] = minimumOffsets[source]
           maximumOffsets[index] = maximumOffsets[source]
           guideOffsets[index] = guideOffsets[source]
@@ -1136,6 +1176,8 @@ export function createTrackBoundReplayMotionRoute(
       guideSurface,
       curbSurface,
       signature: geometrySignature,
+      driveableMinimumOffsets,
+      driveableMaximumOffsets,
       minimumOffsets,
       maximumOffsets,
       guideOffsets,
@@ -1148,6 +1190,47 @@ export function createTrackBoundReplayMotionRoute(
       minimumSafeWidthMeters,
       maximumSafeWidthMeters,
     })
+  }
+
+  // Keep the automatic replay within its fully-safe corridor. Manual takes
+  // may use a legal two-wheel exit: the outside pair can cross the white line,
+  // while the opposite pair remains inside it by a small tire buffer. This is
+  // deliberately separate from automatic playback, which never leaves the
+  // modeled road corridor.
+  const manualOutsideWhiteLineAllowanceMeters =
+    twoWheelOutsideWhiteLineAllowance(
+      calibrationWhiteLineAllowanceMeters,
+      wheelCenterHalfTrackMeters,
+      REPLAY_WHITE_LINE_TIRE_INSET_METERS,
+    )
+  const calibrationMinimumOffsets = new Float64Array(sampleCount)
+  const calibrationMaximumOffsets = new Float64Array(sampleCount)
+  for (let index = 0; index < sampleCount; index += 1) {
+    const whiteLineBounds = expandManualCalibrationBounds(
+      minimumOffsets[index],
+      maximumOffsets[index],
+      marginMeters,
+      marginMeters,
+    )
+    const minimumOffsetMeters =
+      whiteLineBounds.minimumOffsetMeters -
+      manualOutsideWhiteLineAllowanceMeters
+    const maximumOffsetMeters =
+      whiteLineBounds.maximumOffsetMeters +
+      manualOutsideWhiteLineAllowanceMeters
+    if (minimumOffsetMeters <= maximumOffsetMeters) {
+      calibrationMinimumOffsets[index] = minimumOffsetMeters
+      calibrationMaximumOffsets[index] = maximumOffsetMeters
+      continue
+    }
+
+    const midpoint = clamp(
+      (minimumOffsets[index] + maximumOffsets[index]) * 0.5,
+      driveableMinimumOffsets[index],
+      driveableMaximumOffsets[index],
+    )
+    calibrationMinimumOffsets[index] = midpoint
+    calibrationMaximumOffsets[index] = midpoint
   }
 
   // Keep curb windows on the shared video/OpenF1 clock. Longitudinal phase
@@ -1178,6 +1261,11 @@ export function createTrackBoundReplayMotionRoute(
     }))
     .sort((a, b) => a.routeProgress - b.routeProgress)
 
+  const authoredLineAt = createAuthoredLineSampler(
+    authoredLinePoints,
+    route.curveLengthMeters,
+  )
+
   for (let index = 0; index < sampleCount; index += 1) {
     const routeProgress = index / sampleCount
     const manualDeltaMeters = deltaAt(routeProgress)
@@ -1187,11 +1275,23 @@ export function createTrackBoundReplayMotionRoute(
       ? guideOffsets[index] +
         (curbIntent.targetOffsetMeters - guideOffsets[index]) * curbMix
       : guideOffsets[index]
-    offsets[index] = clamp(
+    const fallbackOffset = clamp(
       automaticOffset + manualDeltaMeters,
       minimumOffsets[index],
       maximumOffsets[index],
     )
+    const authored = authoredLineAt(routeProgress)
+    if (!authored) {
+      offsets[index] = fallbackOffset
+      continue
+    }
+    const authoredOffset = clamp(
+      authored.offsetMeters,
+      minimumOffsets[index],
+      maximumOffsets[index],
+    )
+    offsets[index] =
+      fallbackOffset + (authoredOffset - fallbackOffset) * authored.weight
   }
 
   // Footage checkpoints can be very close together at a chicane. Enforce a
@@ -1230,12 +1330,42 @@ export function createTrackBoundReplayMotionRoute(
     maximumCorrectionMeters = Math.max(maximumCorrectionMeters, correction)
   }
 
-  const lateralOffsetAt = (routeProgress: number) => {
+  const constrainedLateralOffsetAt = (routeProgress: number) => {
     const tablePosition = wrap01(routeProgress) * sampleCount
     const lower = Math.floor(tablePosition) % sampleCount
     const upper = (lower + 1) % sampleCount
     const alpha = tablePosition - Math.floor(tablePosition)
     return offsets[lower] + (offsets[upper] - offsets[lower]) * alpha
+  }
+  const authoredLineWeightAt = (routeProgress: number) =>
+    authoredLineAt(routeProgress)?.weight ?? 0
+  const lateralOffsetAt = (routeProgress: number) => {
+    const constrainedOffset = constrainedLateralOffsetAt(routeProgress)
+    const authored = authoredLineAt(routeProgress)
+    if (!authored) return constrainedOffset
+
+    // Dense driven spans already obey the same spatial rate limit while they
+    // are recorded. Restore their exact authored value after the global safety
+    // pass so saving a take cannot visibly move the car the user just QA'd.
+    const authority = smoothstep01((authored.weight - 0.98) / 0.02)
+    if (authority <= 0) return constrainedOffset
+    const minimum = tableValueAt(calibrationMinimumOffsets, routeProgress)
+    const maximum = tableValueAt(calibrationMaximumOffsets, routeProgress)
+    const authoredOffset = clamp(authored.offsetMeters, minimum, maximum)
+    return (
+      constrainedOffset +
+      (authoredOffset - constrainedOffset) * authority
+    )
+  }
+  const positionAtOffset = (routeProgress: number, offsetMeters: number) => {
+    const wrappedProgress = wrap01(routeProgress)
+    const base = route.sampleProgress(wrappedProgress)
+    const minimum = tableValueAt(calibrationMinimumOffsets, wrappedProgress)
+    const maximum = tableValueAt(calibrationMaximumOffsets, wrappedProgress)
+    right.set(base.heading.z, 0, -base.heading.x).normalize()
+    return base.position
+      .clone()
+      .addScaledVector(right, clamp(offsetMeters, minimum, maximum))
   }
   const correctedPositionAt = (routeProgress: number) => {
     const base = route.sampleProgress(routeProgress)
@@ -1253,6 +1383,23 @@ export function createTrackBoundReplayMotionRoute(
     const position = correctedPositionAt(wrappedProgress)
     const previous = correctedPositionAt(wrap01(wrappedProgress - headingStep))
     const next = correctedPositionAt(wrap01(wrappedProgress + headingStep))
+    const heading = next.clone().sub(previous).setY(0).normalize()
+    return { position, heading, routeProgress: wrappedProgress }
+  }
+  const sampleProgressAtOffset = (
+    routeProgress: number,
+    offsetMeters: number,
+  ): ReplayMotionSample => {
+    const wrappedProgress = wrap01(routeProgress)
+    const position = positionAtOffset(wrappedProgress, offsetMeters)
+    const previous = positionAtOffset(
+      wrap01(wrappedProgress - headingStep),
+      offsetMeters,
+    )
+    const next = positionAtOffset(
+      wrap01(wrappedProgress + headingStep),
+      offsetMeters,
+    )
     const heading = next.clone().sub(previous).setY(0).normalize()
     return { position, heading, routeProgress: wrappedProgress }
   }
@@ -1370,14 +1517,21 @@ export function createTrackBoundReplayMotionRoute(
     corridorDiagnostics: diagnostics,
     corridorSample(tMs: number) {
       const routeProgress = displayProgressAt(route.sample(tMs).routeProgress)
-      const minimumOffsetMeters = tableValueAt(minimumOffsets, routeProgress)
-      const maximumOffsetMeters = tableValueAt(maximumOffsets, routeProgress)
+      const minimumOffsetMeters = tableValueAt(
+        calibrationMinimumOffsets,
+        routeProgress,
+      )
+      const maximumOffsetMeters = tableValueAt(
+        calibrationMaximumOffsets,
+        routeProgress,
+      )
       const guideOffsetMeters = tableValueAt(guideOffsets, routeProgress)
       const offsetMeters = lateralOffsetAt(routeProgress)
       const width = maximumOffsetMeters - minimumOffsetMeters
       const curbIntent = curbIntentAt(routeProgress)
       const correctedSample = sampleProgress(routeProgress)
       return {
+        curveLengthMeters: route.curveLengthMeters,
         routeProgress,
         minimumOffsetMeters,
         maximumOffsetMeters,
@@ -1387,6 +1541,8 @@ export function createTrackBoundReplayMotionRoute(
         manualDeltaMeters: deltaAt(routeProgress),
         roadFraction:
           width > 1e-9 ? (offsetMeters - minimumOffsetMeters) / width : 0.5,
+        authoredLineWeight: authoredLineWeightAt(routeProgress),
+        boundaryLimited: false,
         curbSide: curbIntent?.onboardSide ?? null,
         curbLabel: curbIntent?.label ?? null,
         curbWeight: curbIntent?.weight ?? 0,
@@ -1396,6 +1552,7 @@ export function createTrackBoundReplayMotionRoute(
       }
     },
     sampleProgress,
+    sampleProgressAtOffset,
     sample(tMs: number) {
       return sampleProgress(displayProgressAt(route.sample(tMs).routeProgress))
     },
