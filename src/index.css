@@ -1,3 +1,13 @@
+@font-face {
+  font-family: 'ScribbleFont';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url('/fonts/ScribbleFont-Regular.woff2') format('woff2'),
+    url('/fonts/ScribbleFont-Regular.otf') format('opentype');
+}
+
 :root {
   --bg: #0b0c0e;
   --bg-raised: #12141a;
@@ -13,6 +23,7 @@
   --font-display: 'Archivo Narrow', 'Arial Narrow', sans-serif;
   --font-body: 'IBM Plex Sans', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-brand: 'ScribbleFont', 'Comic Sans MS', cursive;
   --nav-h: 56px;
   --playhead-h: 48px;
   --onboard-w: 40vw;

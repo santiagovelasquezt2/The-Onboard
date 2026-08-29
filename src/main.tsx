@@ -3,10 +3,15 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { resolveAppMode } from './appMode.ts'
 
+const appMode = resolveAppMode(window.location.pathname)
 const RootApp =
-  resolveAppMode(window.location.pathname) === 'driving-line-lab'
-    ? lazy(() => import('./DrivingLineLab.tsx'))
-    : lazy(() => import('./App.tsx'))
+  appMode === 'landing'
+    ? lazy(() => import('./LandingPage.tsx'))
+    : appMode === 'hero'
+      ? lazy(() => import('./HeroGlassPage.tsx'))
+      : appMode === 'driving-line-lab'
+        ? lazy(() => import('./DrivingLineLab.tsx'))
+        : lazy(() => import('./App.tsx'))
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

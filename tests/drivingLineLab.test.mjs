@@ -48,10 +48,15 @@ function mark(overrides = {}) {
   }
 }
 
-test('the lab is a sibling endpoint and pathname wins over query modes', () => {
+test('the landing, replay, and lab resolve from the pathname', () => {
+  assert.equal(resolveAppMode('/'), 'landing')
+  assert.equal(resolveAppMode('///'), 'landing')
+  assert.equal(resolveAppMode('/hero'), 'hero')
+  assert.equal(resolveAppMode('/hero/'), 'hero')
+  assert.equal(resolveAppMode('/replay'), 'replay')
+  assert.equal(resolveAppMode('/replay/'), 'replay')
   assert.equal(resolveAppMode('/driving-line-lab'), 'driving-line-lab')
   assert.equal(resolveAppMode('/driving-line-lab/'), 'driving-line-lab')
-  assert.equal(resolveAppMode('/'), 'replay')
   assert.equal(resolveAppMode('/anything-else'), 'replay')
 })
 

@@ -43,6 +43,8 @@ public/media/**
 !public/media/track/.gitkeep
 !public/media/car/
 !public/media/car/.gitkeep
+!public/media/helmet/
+!public/media/helmet/README.md
 
 # Alternate media root (if used)
 media/**
