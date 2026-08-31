@@ -16,6 +16,7 @@ test('landing-to-replay navigation has no added interstitial page', async () => 
 
   assert.match(mainSource, /<Suspense fallback=\{null\}>/u)
   assert.doesNotMatch(mainSource, /AppLoadingFallback|RootErrorBoundary/u)
+  assert.match(mainSource, /<SilentErrorBoundary label="app">/u)
   assert.doesNotMatch(replaySource, /ReplayEntryLoader|loaderExitComplete/u)
   assert.doesNotMatch(replaySource, /aria-hidden=|\binert=/u)
   assert.match(replaySource, /disabled=\{!videoReady\}/u)

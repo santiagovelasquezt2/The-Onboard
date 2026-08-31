@@ -21,6 +21,7 @@ import * as THREE from 'three'
 import { RUNTIME_ASSETS } from '../../runtimeAssets'
 import { Icon } from '../../ui/Icon'
 import { ReliableCanvas } from '../../ui/ReliableCanvas'
+import { SilentErrorBoundary } from '../../ui/SilentErrorBoundary'
 import styles from './HeroPage.module.css'
 import {
   HERO_PENCIL_REVEAL_DURATION_MS,
@@ -637,30 +638,32 @@ export default function HeroPage() {
             The Onboard
           </h1>
 
-          <ReliableCanvas
-            className={styles.canvas}
-            camera={{ fov: 34, position: [0, 0, 7.4] }}
-            dpr={[1, 1.25]}
-            frameloop={heroCanvasVisible ? 'always' : 'never'}
-            rendererOptions={{
-              alpha: false,
-              antialias: true,
-              powerPreference: 'high-performance',
-            }}
-            onCreated={({ gl }) => {
-              gl.toneMapping = THREE.ACESFilmicToneMapping
-              gl.toneMappingExposure = 0.88
-            }}
-            performance={{ min: 0.5 }}
-          >
-            <Suspense fallback={null}>
-              <AdaptiveDpr />
-              <HeroScene
-                onTitleLayout={handleTitleLayout}
-                onTitleReady={handleTitleReady}
-              />
-            </Suspense>
-          </ReliableCanvas>
+          <SilentErrorBoundary label="hero scene">
+            <ReliableCanvas
+              className={styles.canvas}
+              camera={{ fov: 34, position: [0, 0, 7.4] }}
+              dpr={[1, 1.25]}
+              frameloop={heroCanvasVisible ? 'always' : 'never'}
+              rendererOptions={{
+                alpha: false,
+                antialias: true,
+                powerPreference: 'high-performance',
+              }}
+              onCreated={({ gl }) => {
+                gl.toneMapping = THREE.ACESFilmicToneMapping
+                gl.toneMappingExposure = 0.88
+              }}
+              performance={{ min: 0.5 }}
+            >
+              <Suspense fallback={null}>
+                <AdaptiveDpr />
+                <HeroScene
+                  onTitleLayout={handleTitleLayout}
+                  onTitleReady={handleTitleReady}
+                />
+              </Suspense>
+            </ReliableCanvas>
+          </SilentErrorBoundary>
 
           {introState !== 'waiting' && titleLayout ? (
             <HeroPencilReveal
