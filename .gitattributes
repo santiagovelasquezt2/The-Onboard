@@ -1,6 +1,10 @@
 /public/media/car/amg-w14-runtime-v2.glb -text
 /public/media/helmet/russell-glass-shell.glb -text
 /public/media/track/montreal-runtime-v2.glb -text
+/public/media/onboard.mp4 -text
+/public/media/landing/reel1.mp4 -text
+/public/media/landing/reel2.mp4 -text
+/public/media/landing/reel3.mp4 -text
 /public/basis/basis_transcoder.wasm -text
 /public/fonts/ScribbleFont-Regular.otf -text
 /public/fonts/ScribbleFont-Regular.woff2 -text

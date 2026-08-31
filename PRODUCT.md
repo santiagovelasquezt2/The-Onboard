@@ -16,7 +16,7 @@ Audience for this doc: Santiago + agents building the project (and later the REA
 | Session | 2024 Canadian GP Qualifying — Circuit Gilles Villeneuve (Montreal) |
 | Lap | Q3 pole flyer — OpenF1 **lap 22**, duration **72.000s** (`1:12.000`); pin this onboard lap, not a faster Q2 row |
 | OpenF1 | Confirmed `session_key` **9527**; ingest writes `data/replays/2024-montreal-q-d63-lap22.json` with clipped `car_data` / `location` streams |
-| Video | Local file (Pirelli / F1 pole onboard). User supplies it. **App does not scrape.** Gitignore the footage — do not commit it. |
+| Video | Pinned release file (Pirelli / F1 pole onboard). User supplies and deliberately commits it. **App does not scrape.** |
 
 ## v1 UI (locked wireframe)
 
@@ -31,7 +31,7 @@ Audience for this doc: Santiago + agents building the project (and later the REA
 | --- | --- | --- |
 | Track | Sketchfab — Circuit Gilles Villeneuve Montreal 2019 layout (CC BY) | Decimate for web; align mesh to OpenF1 `location` plane |
 | Car | Sketchfab — AMG W14 S1 (CC BY-NC; credit vecarz / MattsActuallyUsefulModels) | 2023 stand-in for 2024; label if needed. Non-commercial only. |
-| Video | Local MP4 from Downloads (Pirelli 2024 Canada pole lap) | Copied/linked into project as gitignored media |
+| Video | User-supplied MP4 (Pirelli 2024 Canada pole lap) | Pinned in the release manifest and deployed with the app |
 
 ## Tech stack (locked)
 
@@ -49,7 +49,7 @@ Audience for this doc: Santiago + agents building the project (and later the REA
 - Join OpenF1 samples to the lap / session clock
 - Sync video ↔ telemetry ↔ 3D car pose
 - Toggle between recorded telemetry and clearly labelled, derived vehicle-motion physics: longitudinal, lateral, and combined G
-- Offline-friendly demo via replay file + local video
+- Offline-friendly demo via replay file + bundled release video
 - Dark, quiet garage feel (not MultiViewer / esports chrome)
 
 ## Out of scope (v1)
@@ -68,4 +68,4 @@ You can open the local app, play Russell’s Montreal pole lap, and **video + TV
 
 ## Interview one-liner
 
-Historical onboard twin: OpenF1 samples and a local pole-lap video on one honest clock — not a live feed, not a MultiViewer clone.
+Historical onboard twin: OpenF1 samples and a pinned pole-lap video on one honest clock — not a live feed, not a MultiViewer clone.

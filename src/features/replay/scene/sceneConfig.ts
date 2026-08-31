@@ -10,7 +10,7 @@
 
 import { RUNTIME_ASSETS } from '../../../runtimeAssets.ts'
 
-/** Optimized runtime GLBs (gitignored); source assets stay untouched for rebuilds. */
+/** Optimized runtime GLBs are pinned release assets; source assets stay untouched. */
 export const TRACK_URL = RUNTIME_ASSETS.trackModelUrl
 export const CAR_URL = RUNTIME_ASSETS.carModelUrl
 

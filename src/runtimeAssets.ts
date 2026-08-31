@@ -45,13 +45,10 @@ export type RuntimeAssetConfig = {
   helmetModelUrl: string
   /** Must retain its trailing slash for KTX2Loader's file-name appends. */
   basisTranscoderPath: string
-  /** Null when optional landing footage is not configured for production. */
-  landingReelUrls: readonly [string, string, string] | null
-  /**
-   * Null is an intentional production state: onboard footage is supplied by
-   * the user and must not be assumed to exist in a public deployment.
-   */
-  onboardVideoUrl: string | null
+  /** Bundled release footage, or an explicit set of hosted overrides. */
+  landingReelUrls: readonly [string, string, string]
+  /** Bundled release footage, or an explicit hosted override. */
+  onboardVideoUrl: string
 }
 
 function configurationError(variable: string, detail: string): Error {
@@ -201,15 +198,11 @@ export function createRuntimeAssetConfig(
   const landingReelUrls =
     explicitLandingReelCount === 3
       ? (explicitLandingReelUrls as [string, string, string])
-      : environment.DEV === true
-        ? (RUNTIME_ASSET_PATHS.landingReels.map((path) =>
-            runtimeAssetUrl(path, null),
-          ) as [
+      : (RUNTIME_ASSET_PATHS.landingReels.map(resolve) as [
           string,
           string,
           string,
         ])
-        : null
 
   return {
     baseUrl,
@@ -222,11 +215,7 @@ export function createRuntimeAssetConfig(
     helmetModelUrl: resolve(RUNTIME_ASSET_PATHS.helmetModel),
     basisTranscoderPath: resolve(RUNTIME_ASSET_PATHS.basisTranscoder),
     landingReelUrls,
-    onboardVideoUrl:
-      explicitOnboardUrl ??
-      (environment.DEV === true
-        ? runtimeAssetUrl(RUNTIME_ASSET_PATHS.onboardVideo, null)
-        : null),
+    onboardVideoUrl: explicitOnboardUrl ?? resolve(RUNTIME_ASSET_PATHS.onboardVideo),
   }
 }
 

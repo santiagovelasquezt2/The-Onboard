@@ -183,6 +183,33 @@ async function verifyAsset(url, asset, requireLength) {
   if (requireLength && length === null) {
     fail(`${url.href} did not return content-length.`)
   }
+
+  if (asset.output.endsWith('.mp4')) {
+    const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''
+    if (!contentType.includes('video/mp4')) {
+      fail(`${url.href} returned ${contentType || 'no content-type'}, expected video/mp4.`)
+    }
+
+    const rangeResponse = await fetchResponse(url, {
+      headers: {
+        'accept-encoding': 'identity',
+        range: 'bytes=0-15',
+      },
+    })
+    if (rangeResponse.status !== 206) {
+      fail(`${url.href} returned HTTP ${rangeResponse.status} for a byte-range request.`)
+    }
+    const contentRange = rangeResponse.headers.get('content-range')
+    if (contentRange !== `bytes 0-15/${asset.bytes}`) {
+      fail(
+        `${url.href} returned ${contentRange || 'no content-range'}; expected bytes 0-15/${asset.bytes}.`,
+      )
+    }
+    const rangeBytes = await rangeResponse.arrayBuffer()
+    if (rangeBytes.byteLength !== 16) {
+      fail(`${url.href} returned ${rangeBytes.byteLength} bytes for a 16-byte range.`)
+    }
+  }
 }
 
 async function run() {

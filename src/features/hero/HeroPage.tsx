@@ -560,8 +560,7 @@ export default function HeroPage() {
   }, [journeyState])
 
   const landingReelUrls = RUNTIME_ASSETS.landingReelUrls
-  const landingReelsAvailable =
-    landingReelUrls !== null && !reelsUnavailable
+  const landingReelsAvailable = !reelsUnavailable
 
   const handleReelUnavailable = useCallback(() => {
     setReelsUnavailable(true)

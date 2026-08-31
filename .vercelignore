@@ -13,8 +13,6 @@ tmp/
 **/backups/**
 
 data/replays/**
-public/media/onboard.mp4
-public/media/landing/
 public/media/car/*
 !public/media/car/amg-w14-runtime-v2.glb
 public/media/helmet/*

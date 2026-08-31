@@ -12,8 +12,8 @@ import {
 test('release manifest is complete and valid', async () => {
   const manifest = await loadManifest()
   assert.equal(manifest.schemaVersion, 1)
-  assert.equal(manifest.assets.length, 14)
-  assert.equal(manifest.assets.filter((asset) => asset.delivery === 'runtime').length, 7)
+  assert.equal(manifest.assets.length, 18)
+  assert.equal(manifest.assets.filter((asset) => asset.delivery === 'runtime').length, 11)
 })
 
 test('external asset base stages only bundled assets', async () => {
@@ -76,6 +76,8 @@ test('build output allowlist excludes source models and media', async () => {
   assert.equal(isAllowedBuildOutput('THIRD_PARTY_LICENSES.md', outputs), true)
   assert.equal(isAllowedBuildOutput('assets/index-a1b2c3.js', outputs), true)
   assert.equal(isAllowedBuildOutput('media/track/montreal-runtime-v2.glb', outputs), true)
+  assert.equal(isAllowedBuildOutput('media/onboard.mp4', outputs), true)
+  assert.equal(isAllowedBuildOutput('media/landing/reel1.mp4', outputs), true)
   assert.equal(isAllowedBuildOutput('assets/montreal.glb', outputs), false)
   assert.equal(isAllowedBuildOutput('media/track/montreal.blend', outputs), false)
   assert.equal(isAllowedBuildOutput('media/landing/reel.mp4', outputs), false)

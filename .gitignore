@@ -45,6 +45,9 @@ public/media/**
 !public/media/
 !public/media/.gitkeep
 !public/media/README.md
+!public/media/onboard.mp4
+!public/media/landing/
+!public/media/landing/*.mp4
 !public/media/track/
 !public/media/track/.gitkeep
 !public/media/track/montreal-runtime-v2.glb

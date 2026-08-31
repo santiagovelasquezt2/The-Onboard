@@ -47,6 +47,25 @@ https://github.com/santiagovelasquezt2/Openf1-garage/blob/master/public/media/RE
 https://github.com/santiagovelasquezt2/Openf1-garage/blob/master/public/media/helmet/README.md
 
 
+VIDEO FOOTAGE
+=============
+
+The pinned onboard MP4 is an edit of Formula 1's official George Russell
+Montreal pole-lap upload:
+https://www.youtube.com/watch?v=fAQe0i2rzKg
+
+The three landing reels are edits of publicly posted Formula 1, Mercedes, Sky
+Sports, and TikTok footage. Local source metadata identifies TikTok clip IDs
+7657003703106342164 and 7550758049900743958; the third reel includes visible
+@fastlane_culture and Sky Sports attribution.
+
+No redistribution license for this footage is asserted by TheOnboard. All
+footage, broadcasts, music, trademarks, and related rights remain with their
+respective owners. The files are included at the project owner's direction for
+this unofficial, non-commercial fan and portfolio demonstration. Replace or
+remove them before any commercial use or when permission is required.
+
+
 OPENF1 HISTORICAL DATA
 ======================
 

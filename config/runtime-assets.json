@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "releaseId": "2024-montreal-q-d63-lap22-v1",
+  "releaseId": "2024-montreal-q-d63-lap22-v2",
   "assets": [
     {
       "id": "favicon",
@@ -15,8 +15,8 @@
       "source": "public/THIRD_PARTY_NOTICES.txt",
       "output": "THIRD_PARTY_NOTICES.txt",
       "delivery": "bundled",
-      "bytes": 5743,
-      "sha256": "530942f20f23ffba40f0b6c4ca9b009aadee38e1fd3b82f48e82e6c13fdc9d1a"
+      "bytes": 6573,
+      "sha256": "9ab9f9963373ac1a7def9114975ff72dd3bec5e0bfc2410c1e7e471c51f6c07f"
     },
     {
       "id": "robots",
@@ -89,6 +89,38 @@
       "delivery": "runtime",
       "bytes": 91745,
       "sha256": "27bb365d4d8891f2590bc3fe6d799cf876961e08b7083842f1f8ae5527a47b0f"
+    },
+    {
+      "id": "russell-onboard-video",
+      "source": "public/media/onboard.mp4",
+      "output": "media/onboard.mp4",
+      "delivery": "runtime",
+      "bytes": 64859981,
+      "sha256": "7f0edb73c896e17d95835d7470f8bad58a435c9578532ada593d3daa1dabb418"
+    },
+    {
+      "id": "landing-reel-1",
+      "source": "public/media/landing/reel1.mp4",
+      "output": "media/landing/reel1.mp4",
+      "delivery": "runtime",
+      "bytes": 2017956,
+      "sha256": "5d85daf55e01e43dbda713ce480f16600c4f823f1b603075a2c21ecf5decd60b"
+    },
+    {
+      "id": "landing-reel-2",
+      "source": "public/media/landing/reel2.mp4",
+      "output": "media/landing/reel2.mp4",
+      "delivery": "runtime",
+      "bytes": 3463712,
+      "sha256": "af71e24040324cc9411da9893d0d48d8b8e1a06dfd2c8b26b54526a2efc83001"
+    },
+    {
+      "id": "landing-reel-3",
+      "source": "public/media/landing/reel3.mp4",
+      "output": "media/landing/reel3.mp4",
+      "delivery": "runtime",
+      "bytes": 4468148,
+      "sha256": "9d1a71ad8c2b3fd0506dbf43bcfec60138c4587180efdd6d0dd3f707cecbb544"
     },
     {
       "id": "russell-glass-helmet",

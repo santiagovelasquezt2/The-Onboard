@@ -26,7 +26,7 @@ export const stagingPublicRoot = path.join(
 )
 export const productionOutputRoot = path.join(repositoryRoot, 'dist')
 
-const MAXIMUM_PRODUCTION_OUTPUT_BYTES = 90 * 1024 * 1024
+const MAXIMUM_PRODUCTION_OUTPUT_BYTES = 160 * 1024 * 1024
 const SHA256_PATTERN = /^[a-f0-9]{64}$/
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/
 
@@ -45,6 +45,10 @@ const requiredRuntimeOutputs = new Set([
   'basis/basis_transcoder.js',
   'basis/basis_transcoder.wasm',
   'replays/2024-montreal-q-d63-lap22.json',
+  'media/onboard.mp4',
+  'media/landing/reel1.mp4',
+  'media/landing/reel2.mp4',
+  'media/landing/reel3.mp4',
   'media/helmet/russell-glass-shell.glb',
   'media/track/montreal-runtime-v2.glb',
   'media/car/amg-w14-runtime-v2.glb',
@@ -90,6 +94,10 @@ const allowedGeneratedAssetExtensions = new Set([
 const allowedTrackedMediaFiles = new Set([
   'public/media/.gitkeep',
   'public/media/README.md',
+  'public/media/onboard.mp4',
+  'public/media/landing/reel1.mp4',
+  'public/media/landing/reel2.mp4',
+  'public/media/landing/reel3.mp4',
   'public/media/car/.gitkeep',
   'public/media/car/amg-w14-runtime-v2.glb',
   'public/media/helmet/README.md',

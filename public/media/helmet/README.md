@@ -8,7 +8,7 @@
 - The leading edge is computed from each side's visor and pivot-trim bounds and placed immediately behind that hardware. No stripe or speed-line geometry is included.
 - Headless QA reimports the GLB, checks bilateral placement, verifies that only the 12 outline components remain, and renders a focused side view to `tmp/helmet-austrian-2018/qa-63-side.png`.
 - Source paint/livery textures, UV layers, vertex colors, custom split normals, and embedded images are stripped. `Compound.006` remains excluded as interior lining.
-- Generated locally by `tmp/helmet-austrian-2018/fix_clips_and_63.py`; the large GLB stays gitignored. Supply it locally as `public/media/helmet/russell-glass-shell.glb`.
+- Generated locally by `tmp/helmet-austrian-2018/fix_clips_and_63.py`; the exact runtime GLB is committed at `public/media/helmet/russell-glass-shell.glb`, while source archives and working copies remain ignored.
 
 ## Attribution
 

@@ -17,19 +17,23 @@ local source assets with `npm run assets:optimize`.
 The three landing reels drive the muted horizontal film sequence on `/` and
 `/hero` in the order `reel1`, `reel2`, `reel3`.
 
-Everything in this folder is gitignored except this README and `.gitkeep` files. You must supply video and 3D models locally.
+The four MP4s and exact runtime GLBs in the release manifest are committed and
+ship with production. Source models, Blender files, backups, and any other
+working media remain ignored.
 
 ---
 
 ## 1. Onboard video
 
-Copy the local Pirelli pole-lap file into place:
+To replace the pinned Pirelli pole-lap file, copy the approved source into place:
 
 ```bash
 cp "/path/to/your/onboard.mp4" public/media/onboard.mp4
 ```
 
-The app expects **`/media/onboard.mp4`**. Do not scrape or download video from the web in-app.
+The app expects **`/media/onboard.mp4`**. After replacing it, update its byte
+size and SHA-256 in `config/runtime-assets.json`. Do not scrape or download
+video from the web in-app.
 
 ### Timed-lap window
 
@@ -92,7 +96,8 @@ Steps:
 
 The `/hero` prototype loads `public/media/helmet/russell-glass-shell.glb`. It was cleaned from the local source archive `f1-helmet-austrian-gp-2018.zip`, with its paint and textures stripped for the glass treatment. See [`public/media/helmet/README.md`](helmet/README.md) for the mesh roles and outstanding attribution note.
 
-The GLB is intentionally gitignored with the other large media assets, so each checkout must supply it locally at that exact path.
+The exact runtime GLB is committed as a release asset; its source archive and
+working copies remain ignored.
 
 ---
 

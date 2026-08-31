@@ -14,8 +14,8 @@
 - TheOnboard (workspace Openf1-garage) is a greenfield historical F1 onboard replay product, not live race control.
 - Locked v1 scope: 1 driver, 1 lap, 1 track — George Russell’s 2024 Canadian GP Qualifying pole lap (Montreal / Circuit Gilles Villeneuve); OpenF1 `session_key` 9527, driver 63, lap 22.
 - Locked v1 UI: full-bleed FOM-style T-cam (car-local mount; escape via `?camera=chase`); onboard video PiP top-left; stacked car-data pills under the PiP; nav strip top-right; shared playhead keeps video, 3D, and telemetry aligned.
-- App routes: `/` glass-helmet landing page (`HeroPage`); `/hero` is an alias; `/replay` onboard twin; landing videos under `public/media/landing/` are legacy local assets (gitignored).
-- Video is a local file the user provides; the app must not scrape or download video itself.
+- App routes: `/` glass-helmet landing page (`HeroPage`); `/hero` is an alias; `/replay` onboard twin; the three landing reels and pinned onboard MP4 ship as exact release assets.
+- Video sources are user-provided and deliberately committed for this release; the app must not scrape or download video itself.
 - Two-car compare and g-forces are out of v1 (g-forces deferred).
 - Canonical product definition is `PRODUCT.md` at the repo root.
 - OpenF1 historical data (2023+) is free; live is paid. `car_data` and `location` are ~3.7 Hz samples; `location` is x/y/z on a session-local plane with no lateral placement; API has no camera pose, steering, or wheel rotation.

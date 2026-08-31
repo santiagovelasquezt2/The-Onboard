@@ -20,15 +20,19 @@ test('development keeps the existing local runtime paths', () => {
   ])
 })
 
-test('production leaves user-supplied footage absent without an asset origin', () => {
+test('production uses the bundled footage without an external asset origin', () => {
   const assets = createRuntimeAssetConfig({ DEV: false })
 
   assert.equal(assets.trackModelUrl, '/media/track/montreal-runtime-v2.glb')
-  assert.equal(assets.onboardVideoUrl, null)
-  assert.equal(assets.landingReelUrls, null)
+  assert.equal(assets.onboardVideoUrl, '/media/onboard.mp4?v=20260821')
+  assert.deepEqual(assets.landingReelUrls, [
+    '/media/landing/reel1.mp4',
+    '/media/landing/reel2.mp4',
+    '/media/landing/reel3.mp4',
+  ])
 })
 
-test('one immutable base URL prefixes distributable runtime assets only', () => {
+test('one immutable base URL prefixes every distributable runtime asset', () => {
   const assets = createRuntimeAssetConfig({
     DEV: false,
     VITE_ASSET_BASE_URL: 'https://assets.example/releases/v1/',
@@ -51,8 +55,15 @@ test('one immutable base URL prefixes distributable runtime assets only', () => 
     assets.basisTranscoderPath,
     'https://assets.example/releases/v1/basis/',
   )
-  assert.equal(assets.onboardVideoUrl, null)
-  assert.equal(assets.landingReelUrls, null)
+  assert.equal(
+    assets.onboardVideoUrl,
+    'https://assets.example/releases/v1/media/onboard.mp4?v=20260821',
+  )
+  assert.deepEqual(assets.landingReelUrls, [
+    'https://assets.example/releases/v1/media/landing/reel1.mp4',
+    'https://assets.example/releases/v1/media/landing/reel2.mp4',
+    'https://assets.example/releases/v1/media/landing/reel3.mp4',
+  ])
 })
 
 test('an explicit onboard URL overrides the shared asset origin', () => {
