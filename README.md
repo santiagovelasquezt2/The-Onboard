@@ -1,6 +1,6 @@
 **The-Onboard is an app where you can view the pole lap of an f1 car and see the cool data that comes with it**
 
-**i borrowed an f1 car + a track + a helmet from sketchfab and vibed my way to what you see**
+**i borrowed an f1 car + a track + a helmet from sketchfab and worked my way to what you see**
 
 **pulled the data from [openf1.org](http://openf1.org) and put it all together**
 
