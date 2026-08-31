@@ -12,4 +12,9 @@
 
 ## Attribution
 
-TODO: recover the source ZIP listing/readme and record the original Sketchfab model URL, author, and confirmed license before publication.
+Adapted from [F1 Helmet Austrian GP 2018](https://sketchfab.com/3d-models/f1-helmet-austrian-gp-2018-4c655f55a60a4600a21a90f47edae638)
+by [VTX](https://sketchfab.com/VTX_car), licensed under
+[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+The local derivative removes the original paint and textures, rebuilds damaged
+hardware, and adds the glass treatment and number 63 geometry described above.
+It remains non-commercial and is shared under the same license.

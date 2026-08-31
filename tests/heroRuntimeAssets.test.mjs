@@ -1,0 +1,55 @@
+import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
+import test from 'node:test'
+
+const heroSourceUrl = new URL(
+  '../src/features/hero/HeroPage.tsx',
+  import.meta.url,
+)
+const packageMetadataUrl = new URL(
+  '../node_modules/@pmndrs/assets/package.json',
+  import.meta.url,
+)
+
+test('hero environment is a compact, pinned CC0 package asset', async () => {
+  const [{ default: environmentUrl }, packageMetadataRaw] = await Promise.all([
+    import('@pmndrs/assets/hdri/apartment.exr.js'),
+    readFile(packageMetadataUrl, 'utf8'),
+  ])
+  const packageMetadata = JSON.parse(packageMetadataRaw)
+  const prefix = 'data:application/exr;base64,'
+
+  assert.equal(packageMetadata.version, '1.7.0')
+  assert.equal(packageMetadata.license, 'CC0-1.0')
+  assert.ok(environmentUrl.startsWith(prefix))
+
+  const bytes = Buffer.from(environmentUrl.slice(prefix.length), 'base64')
+  assert.equal(bytes.length, 100_399)
+  assert.equal(
+    createHash('sha256').update(bytes).digest('hex'),
+    '31c62c03b5686b3d899071070ec1bfc760a3ddc1e6a05915ebc28102fef2fb1c',
+  )
+})
+
+test('hero avoids remote environment presets and the Troika text worker', async () => {
+  const source = await readFile(heroSourceUrl, 'utf8')
+
+  assert.match(source, /files=\{apartmentEnvironmentUrl\}/u)
+  assert.doesNotMatch(source, /\bpreset\s*=/u)
+  assert.doesNotMatch(
+    source,
+    /<Text\b|onSync=|textRenderInfo|troika-three-text/u,
+  )
+})
+
+test('hero keeps the approved transmission budget and sleeps offscreen', async () => {
+  const source = await readFile(heroSourceUrl, 'utf8')
+
+  assert.match(source, /resolution=\{384\}/u)
+  assert.match(source, /samples=\{4\}/u)
+  assert.match(
+    source,
+    /frameloop=\{heroCanvasVisible \? 'always' : 'never'\}/u,
+  )
+})

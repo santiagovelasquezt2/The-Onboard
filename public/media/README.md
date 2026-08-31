@@ -5,13 +5,17 @@ Vite serves files under `public/` at the site root. Place local assets here so t
 | Asset | Disk path | App URL |
 | --- | --- | --- |
 | Onboard video | `public/media/onboard.mp4` | `/media/onboard.mp4` |
-| Landing reels | `public/media/landing/reel{1,2,3}.mp4` | `/media/landing/reel{1,2,3}.mp4` |
-| Track GLB | `public/media/track/montreal.glb` | `/media/track/montreal.glb` |
-| Car GLB | `public/media/car/amg-w14.glb` | `/media/car/amg-w14.glb` |
+| Landing sequence videos | `public/media/landing/reel{1,2,3}.mp4` | `/media/landing/reel{1,2,3}.mp4` |
+| Track source GLB | `public/media/track/montreal-enhanced.glb` | local build input |
+| Track runtime GLB | `public/media/track/montreal-runtime-v2.glb` | `/media/track/montreal-runtime-v2.glb` |
+| Car source GLB | `public/media/car/amg-w14.glb` | local build input |
+| Car runtime GLB | `public/media/car/amg-w14-runtime-v2.glb` | `/media/car/amg-w14-runtime-v2.glb` |
 | Helmet glass shell | `public/media/helmet/russell-glass-shell.glb` | `/media/helmet/russell-glass-shell.glb` |
 
-The 3D scene expects those exact filenames.
-The three landing reels are local, muted looping backgrounds for the home page.
+The 3D scene expects the two `*-runtime-v2.glb` files. Generate them from the
+local source assets with `npm run assets:optimize`.
+The three landing reels drive the muted horizontal film sequence on `/` and
+`/hero` in the order `reel1`, `reel2`, `reel3`.
 
 Everything in this folder is gitignored except this README and `.gitkeep` files. You must supply video and 3D models locally.
 
@@ -22,8 +26,7 @@ Everything in this folder is gitignored except this README and `.gitkeep` files.
 Copy the local Pirelli pole-lap file into place:
 
 ```bash
-cp "/Users/santiagovelasquez/Downloads/George Russell's Pole Lap _ 2024 Canadian Grand Prix _ Pirelli.mp4" \
-  "/Users/santiagovelasquez/Desktop/swe/Openf1-garage/public/media/onboard.mp4"
+cp "/path/to/your/onboard.mp4" public/media/onboard.mp4
 ```
 
 The app expects **`/media/onboard.mp4`**. Do not scrape or download video from the web in-app.
@@ -34,7 +37,7 @@ The supplied Pirelli clip has pre-lap and post-lap footage. The replay does
 not expose the whole file as its timeline: it maps OpenF1 lap time `0.000s` to
 video time `5.200s` and plays exactly the official `72.000s` lap window. If
 you replace the MP4 with another edit, update `ONBOARD_LAP_START_SECONDS` in
-`src/lapWindow.ts` after locating the frame where the car crosses the timing
+`src/features/replay/lapWindow.ts` after locating the frame where the car crosses the timing
 line. The replacement clip must include the whole timed lap after that frame.
 
 ---
@@ -49,8 +52,13 @@ Steps (Sketchfab requires a logged-in account; downloads are not automated):
 
 1. Open the model page and sign in to Sketchfab.
 2. Download the model (prefer **glTF** / **.glb** if offered).
-3. Unpack if needed and save the main file as **`public/media/track/montreal.glb`** (required name).
+3. Unpack if needed and save the main file as **`public/media/track/montreal.glb`**.
 4. Keep any companion `.bin` / texture files next to the glTF so relative paths resolve.
+
+The enhanced working asset is `montreal-enhanced.glb`. The optimization build
+retiles its preserved source surface into 250 m spatial cells, then writes
+`montreal-runtime-v2.glb`. It keeps all 573,161 triangles, UVs, material face
+assignments, and replay coordinates.
 
 **Credit:** Circuit Gilles Villeneuve Montreal 2019 layout by Dave Love, licensed under CC BY 4.0.
 
@@ -66,13 +74,13 @@ Steps:
 
 1. Open the model page and sign in to Sketchfab.
 2. Download (prefer **glTF** / **.glb**).
-3. Place the main file as **`public/media/car/amg-w14.glb`** (required name).
+3. Place the main file as **`public/media/car/amg-w14.glb`**.
 4. Keep textures / `.bin` beside the glTF if separate.
 
 **Notes:**
 
 - The W14 mesh is a **2023** stand-in for Russell’s **2024** Merc in v1.
-- Livery textures in `amg-w14.glb` were restyled toward the **2024 W15 MTL** look: muted aluminium nose (solid `mercedes_paint_nose`, ~`#383C41` base with metalness ~0.42 / roughness ~0.55 — not near-white), black body, Petronas teal, INEOS red accents, and George Russell **#63** in signature blue (`#00B4E4`) instead of Hamilton’s yellow **#44**. Nose sponsor logos that sat on silver were darkened for contrast; the number atlas top half is cleared so the nose **63** is not ghosted.
+- Livery textures in `amg-w14.glb` were restyled toward the **2024 W15 MTL** look: muted aluminium nose (`mercedes_paint_nose` base ~`#555B61`, metalness ~0.38 / roughness ~0.56), black body, Petronas teal, INEOS red accents, and George Russell **#63** in signature blue (`#00B4E4`) instead of Hamilton’s yellow **#44**. The number atlas keeps a single cyan **63** (outline/ghost faces removed); runtime `prepareCar` must not apply body clearcoat to `mercedes_paint_nose` or the silver washes white under the scene env map.
 - Original Sketchfab textures are kept as `amg-w14.hamilton-backup.glb` for reference.
 - CC BY-NC means attribution **and** no commercial use. Fine for a personal / portfolio interview project; not for a commercial product without a different license or asset.
 
@@ -90,4 +98,9 @@ The GLB is intentionally gitignored with the other large media assets, so each c
 
 ## 5. Performance tip
 
-Sketchfab race tracks and F1 cars are often far too dense for real-time web. Before shipping to the browser, open the mesh in **Blender**, decimate / retopo to a sensible poly count, merge materials where possible, and re-export glTF/GLB. Prefer one self-contained `.glb` per asset when practical.
+Run `npm run assets:optimize` after changing either production GLB. The build is
+non-destructive: it copies the track `.blend`, exports fine spatial tiles, keeps
+the original texture dimensions, encodes high-quality UASTC/KTX2 mipmaps, and
+applies Meshopt geometry compression. Runtime rendering batches track tiles and
+static opaque car pieces into material-level multi-draw buffers; wheel
+assemblies and transparency-sensitive pieces remain independent.

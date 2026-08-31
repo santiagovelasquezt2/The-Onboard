@@ -2,16 +2,30 @@
   "name": "theonboard",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "npm@11.10.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run release:stage-public && tsc -b && vite build && npm run release:generate-404 && npm run release:verify-output",
     "lint": "oxlint src",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test",
+    "test:smoke": "node scripts/release/http-smoke.mjs",
     "preview": "vite preview",
-    "ingest:pull": "npm run pull --prefix scripts/ingest"
+    "release:toolchain": "node scripts/release/toolchain.mjs",
+    "release:preflight": "node scripts/release/runtime-assets.mjs verify",
+    "release:git-assets": "node scripts/release/runtime-assets.mjs git",
+    "release:stage-public": "node scripts/release/runtime-assets.mjs stage",
+    "release:generate-404": "node scripts/release/runtime-assets.mjs not-found",
+    "release:verify-output": "node scripts/release/runtime-assets.mjs output",
+    "verify": "npm run release:toolchain && npm run release:preflight && npm run lint && npm test && npm run build",
+    "assets:optimize": "node scripts/assets/optimize-3d-assets.mjs",
+    "ingest:pull": "tsx scripts/ingest/pull.ts"
+  },
+  "engines": {
+    "node": "24.x"
   },
   "dependencies": {
+    "@pmndrs/assets": "1.7.0",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "react": "^19.2.8",
@@ -25,6 +39,7 @@
     "@types/three": "^0.185.4",
     "@vitejs/plugin-react": "^6.0.4",
     "oxlint": "^1.75.0",
+    "tsx": "^4.19.3",
     "typescript": "~6.0.2",
     "vite": "^8.2.0"
   }

@@ -1,0 +1,129 @@
+THEONBOARD THIRD-PARTY NOTICES
+Last updated: 2026-08-31
+
+TheOnboard is an unofficial, non-commercial fan and portfolio project. It is
+not associated with, affiliated with, endorsed by, or sponsored by Formula 1,
+the FIA, Mercedes-AMG Petronas Formula One Team, George Russell, or their
+affiliates. F1, FORMULA ONE, FIA FORMULA ONE WORLD CHAMPIONSHIP, GRAND PRIX,
+team names, driver names, and related marks belong to their respective owners.
+
+This release contains material whose licenses restrict it to non-commercial
+use. Do not use this release for commercial purposes without replacing that
+material or obtaining separate permission.
+
+
+3D MODELS
+=========
+
+Circuit Gilles Villeneuve Montreal 2019 layout
+Author: Dave Love
+Source: https://sketchfab.com/3d-models/circuit-gilles-villeneuve-montreal-2019-layout-5875d33d5ddb44f4a6c1188ed6776fa8
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+License: https://creativecommons.org/licenses/by/4.0/
+Changes: Materials were adjusted, the surface was partitioned into spatial
+tiles, and textures and geometry were optimized for browser delivery.
+
+AMG W14 S1
+Author: vecarz / MattsActuallyUsefulModels
+Source: https://sketchfab.com/3d-models/amg-w14-s1-wwwvecarzcom-057679fc5a32411fa7fd6e43c16badae
+License: Creative Commons Attribution-NonCommercial 4.0 International
+(CC BY-NC 4.0)
+License: https://creativecommons.org/licenses/by-nc/4.0/
+Changes: The livery was restyled toward George Russell's 2024 Montreal car,
+and textures and geometry were optimized for browser delivery.
+
+F1 Helmet Austrian GP 2018
+Author: VTX
+Source: https://sketchfab.com/3d-models/f1-helmet-austrian-gp-2018-4c655f55a60a4600a21a90f47edae638
+License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International (CC BY-NC-SA 4.0)
+License: https://creativecommons.org/licenses/by-nc-sa/4.0/
+Changes: Source paint and textures were removed, damaged hardware was rebuilt,
+and the glass treatment and number 63 geometry were added. The helmet
+derivative is distributed under CC BY-NC-SA 4.0.
+
+Detailed model provenance and transformation notes remain in:
+https://github.com/santiagovelasquezt2/Openf1-garage/blob/master/public/media/README.md
+https://github.com/santiagovelasquezt2/Openf1-garage/blob/master/public/media/helmet/README.md
+
+
+OPENF1 HISTORICAL DATA
+======================
+
+The golden replay data was obtained from OpenF1:
+https://openf1.org/
+
+OpenF1 publishes its project and data under Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0):
+https://github.com/br-g/openf1/blob/main/LICENSE
+https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+Changes: The source session was limited to George Russell, driver 63, lap 22
+of 2024 Canadian Grand Prix qualifying; timestamps were normalized to the lap,
+sample streams were clipped and joined, and the result was validated for
+offline replay. The replay derivative is distributed under CC BY-NC-SA 4.0.
+
+
+CC0 ENVIRONMENT ASSET
+=====================
+
+The landing scene uses apartment.exr from @pmndrs/assets 1.7.0, a collection
+of CC0 assets by Antoine Bernier and contributors:
+https://github.com/pmndrs/assets
+https://creativecommons.org/publicdomain/zero/1.0/
+
+
+BASIS UNIVERSAL TRANSCODER
+==========================
+
+The Basis Universal transcoder is provided by the Khronos Group / Binomial LLC
+under the Apache License 2.0. The complete license is distributed with this
+release at basis/LICENSE.
+
+Source: https://github.com/BinomialLLC/basis_universal
+License: https://www.apache.org/licenses/LICENSE-2.0
+
+
+MIT-LICENSED SOFTWARE AND UI GEOMETRY
+=====================================
+
+The production build also includes THIRD_PARTY_LICENSES.md. Vite generates
+that file from the exact dependency modules present in the compiled bundles,
+including transitive packages, their versions, license identifiers, and the
+license texts distributed by those packages.
+
+This release includes the following MIT-licensed work:
+
+- React and React DOM, copyright (c) Meta Platforms, Inc. and affiliates.
+  https://react.dev/
+- three.js, copyright (c) 2010-2026 three.js authors.
+  https://threejs.org/
+- React Three Fiber, copyright (c) 2019-2025 Poimandres.
+  https://github.com/pmndrs/react-three-fiber
+- Drei, copyright (c) 2020 react-spring and contributors.
+  https://github.com/pmndrs/drei
+- Hand loader geometry adapted from "Loader" by Pradeepsaranbishnoi
+  (Pradeep Saran), copyright (c) 2026 Pradeepsaranbishnoi.
+  https://uiverse.io/Pradeepsaranbishnoi/tall-fish-38
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Additional dependency versions and license identifiers are recorded in the
+repository's package-lock.json and in each package's distributed license file:
+https://github.com/santiagovelasquezt2/Openf1-garage

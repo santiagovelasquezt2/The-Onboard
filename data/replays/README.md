@@ -18,7 +18,8 @@ public/replays/
 Generate:
 
 ```bash
-cd scripts/ingest && npm install && npm run pull
+npm install
+npm run ingest:pull
 ```
 
 Typical output for the v1 golden lap:
@@ -44,5 +45,5 @@ and raycasts onto the GLB road for elevation and banking.
 ## Notes
 
 - Historical OpenF1 (2023+) is free; live is paid and out of v1.
-- Respect rate limits; 429 backoff is planned on the CLI, not in the UI.
+- The ingest command handles 429 responses with bounded backoff; keep pulls infrequent.
 - Video is a separate local file the user provides — not stored here.

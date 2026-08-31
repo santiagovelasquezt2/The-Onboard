@@ -1,0 +1,257 @@
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+  padding: 0 max(18px, var(--safe-area-right)) 0 18px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-raised) 88%, black 12%);
+}
+
+.pageControls {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.pageButton {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: #9ca2ac;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pageIcon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  opacity: 0.72;
+}
+
+.pageButton[aria-pressed='true'] .pageIcon {
+  opacity: 1;
+}
+
+.pageButton[aria-pressed='true'] {
+  border-color: #3a3f49;
+  background: #242831;
+  color: #fff;
+}
+
+.pageButton:focus-visible {
+  outline: 2px solid #9f8657;
+  outline-offset: 2px;
+}
+
+.cameraControls {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: 0;
+}
+
+.cameraButtons {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid #30343d;
+  border-radius: 999px;
+  background: #0b0d11;
+}
+
+.cameraOption {
+  position: relative;
+  display: inline-flex;
+}
+
+.cameraInput {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.cameraButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #8e949f;
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.cameraIcon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  opacity: 0.72;
+}
+
+.cameraInput:focus-visible + .cameraButton,
+.resetButton:focus-visible {
+  outline: 2px solid #9f8657;
+  outline-offset: 2px;
+}
+
+.cameraInput:checked + .cameraButton {
+  border-color: #3a3f49;
+  background: #242831;
+  color: #fff;
+}
+
+.cameraInput:checked + .cameraButton .cameraIcon {
+  opacity: 1;
+}
+
+.resetButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid #3a3f49;
+  border-radius: 999px;
+  background: rgb(11 13 17 / 82%);
+  color: #aeb3bc;
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.resetIcon {
+  width: 13px;
+  height: 13px;
+  opacity: 0.72;
+}
+
+@media (max-width: 1120px) {
+  .cameraButton {
+    padding: 0 7px;
+  }
+}
+
+@media (hover: hover) {
+  .pageButton:hover {
+    background: #171a20;
+    color: #fff;
+  }
+
+  .pageButton:hover .pageIcon {
+    opacity: 1;
+  }
+
+  .cameraOption:hover .cameraButton {
+    color: #e8e9ec;
+    background: #171a20;
+  }
+
+  .resetButton:hover {
+    border-color: #555c69;
+    color: #fff;
+    background: #171a20;
+  }
+
+  .resetButton:hover .resetIcon {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .nav {
+    gap: 2px;
+    padding: 0 3px;
+    border: 1px solid rgb(126 133 145 / 28%);
+    border-radius: 999px;
+    background: rgb(11 13 17 / 52%);
+    box-shadow: 0 6px 18px rgb(0 0 0 / 22%);
+    backdrop-filter: blur(12px) saturate(115%);
+    -webkit-backdrop-filter: blur(12px) saturate(115%);
+  }
+
+  .pageControls {
+    gap: 0;
+  }
+
+  .pageButton {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+  }
+
+  .pageButtonLabel,
+  .cameraButtonLabel,
+  .resetButtonLabel {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .cameraControls {
+    gap: 2px;
+  }
+
+  .cameraButtons {
+    gap: 0;
+    padding: 0;
+    border-color: rgb(48 52 61 / 80%);
+    background: rgb(8 10 14 / 55%);
+  }
+
+  .cameraButton,
+  .resetButton {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+  }
+
+  .pageIcon {
+    width: 15px;
+    height: 15px;
+  }
+
+  .cameraIcon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .resetIcon {
+    width: 13px;
+    height: 13px;
+  }
+}

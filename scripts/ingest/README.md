@@ -8,12 +8,9 @@ runtime.
 ## Run
 
 ```bash
-cd scripts/ingest
 npm install
-npm run pull
+npm run ingest:pull
 ```
-
-Or from this package: `npx tsx src/pull.ts`.
 
 ## What this does
 
@@ -27,5 +24,5 @@ If the network/API fails, it writes a **mock** replay with the same shape.
 
 ## Notes
 
-- **Rate limits / 429 backoff** (Retry-After, exponential backoff) — not implemented; keep pulls infrequent.
+- Requests use bounded `Retry-After` / exponential backoff; keep pulls infrequent.
 - Live/paid OpenF1 is out of scope for v1.

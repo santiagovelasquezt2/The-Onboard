@@ -3,7 +3,7 @@ import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { isDrivingLineRunPayload } from './src/drivingLineRunPayload.ts'
+import { isDrivingLineRunPayload } from './src/features/replay/calibration/drivingLineRunPayload.ts'
 
 const DRIVING_LINE_RUN_ENDPOINT = '/api/driving-line-runs'
 const MAXIMUM_RUN_PAYLOAD_BYTES = 1_000_000
@@ -93,6 +93,12 @@ function drivingLineRunWriter(): Plugin {
 }
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  build: {
+    license: {
+      fileName: 'THIRD_PARTY_LICENSES.md',
+    },
+  },
+  publicDir: command === 'build' ? '.release/public' : 'public',
   plugins: [react(), drivingLineRunWriter()],
-})
+}))

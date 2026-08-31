@@ -1,0 +1,253 @@
+.telemetry {
+  position: absolute;
+  top: calc(var(--safe-area-top) + var(--onboard-h));
+  bottom: var(--playhead-h);
+  left: var(--safe-area-left);
+  z-index: 4;
+  width: min(clamp(368px, 23vw, 423px), var(--onboard-w));
+  min-width: 0;
+  background: transparent;
+  isolation: isolate;
+  pointer-events: none;
+}
+
+.tableViewport {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  border-right: 1px solid rgb(82 88 84 / 55%);
+  border-bottom: 1px solid rgb(82 88 84 / 55%);
+  border-radius: 0 0 6px 0;
+  background: rgb(238 240 238 / 44%);
+  box-shadow: 10px 12px 28px rgb(0 0 0 / 18%);
+  backdrop-filter: blur(5px) saturate(18%) brightness(108%);
+  scrollbar-color: #969b97 rgb(224 226 224 / 72%);
+  scrollbar-width: thin;
+  pointer-events: auto;
+}
+
+.sheet {
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+  background: transparent;
+  color: #202722;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.channelColumn {
+  width: 22%;
+}
+
+.valueColumn {
+  width: 19%;
+}
+
+.referenceColumn {
+  width: 34%;
+}
+
+.unitColumn {
+  width: 25%;
+}
+
+.sheet th,
+.sheet td {
+  height: 28px;
+  padding: 0 7px;
+  overflow: hidden;
+  border-right: 1px solid rgb(91 97 93 / 24%);
+  border-bottom: 1px solid rgb(91 97 93 / 28%);
+  text-align: left;
+  text-shadow: 0 1px 1px rgb(255 255 255 / 42%);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet tr > :last-child {
+  border-right: 0;
+}
+
+.sheet tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.fieldHeaders th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 32px;
+  border-bottom-color: rgb(79 85 81 / 42%);
+  background: rgb(214 217 214 / 58%);
+  color: #1c241f;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fieldHeaders th:last-child {
+  padding-right: 4px;
+  padding-left: 4px;
+  font-size: 7.5px;
+  letter-spacing: 0.02em;
+}
+
+.channelCell {
+  background: rgb(255 255 255 / 6%);
+  color: #263029;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.valueCell {
+  color: #151b17;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sheet td.valueCell {
+  padding-right: 3px;
+  padding-left: 3px;
+}
+
+.sheet tbody td:nth-child(3) {
+  font-size: 9.25px;
+}
+
+.sheet tbody tr:last-child > * {
+  letter-spacing: 0.02em;
+}
+
+.sheet tbody tr:last-child .channelCell {
+  font-size: 9.25px;
+  letter-spacing: 0.045em;
+}
+
+.brakeOn {
+  background: rgb(220 68 68 / 24%);
+  box-shadow: inset 2px 0 rgb(170 35 35 / 72%);
+  color: #511818;
+}
+
+.drsCell[data-state='open'] {
+  background: rgb(62 174 91 / 25%);
+  box-shadow: inset 2px 0 rgb(31 126 54 / 72%);
+  color: #123c1d;
+}
+
+.drsCell[data-state='ready'],
+.drsCell[data-state='closed'] {
+  background: rgb(61 126 206 / 23%);
+  box-shadow: inset 2px 0 rgb(38 87 151 / 68%);
+  color: #173656;
+}
+
+.drsCell[data-state='standby'] {
+  color: #2e3a31;
+}
+
+.sectionRow th,
+.sectionRow td {
+  border-top: 1px solid rgb(83 91 86 / 35%);
+  border-bottom: 1px solid rgb(83 91 86 / 35%);
+  background: rgb(218 222 219 / 50%);
+  color: #263029;
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.sectionRow td {
+  text-align: right;
+}
+
+.physicsNoteRow th,
+.physicsNoteRow td {
+  border-top: 1px solid rgb(110 91 55 / 28%);
+  background: rgb(237 224 190 / 24%);
+  color: #51452c;
+}
+
+.physicsNoteRow .channelCell {
+  color: #51452c;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .telemetry {
+    top: calc(var(--safe-area-top) + var(--onboard-h) + 6px);
+    bottom: auto;
+    width: var(--onboard-w);
+    height: var(--workbook-h);
+  }
+
+  .tableViewport {
+    border: 1px solid rgb(82 88 84 / 55%);
+    border-radius: 6px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sheet {
+    height: auto;
+    font-size: 8.5px;
+  }
+
+  .channelColumn {
+    width: 34%;
+  }
+
+  .valueColumn {
+    width: 29%;
+  }
+
+  .referenceColumn,
+  .sheet tr:not(.sectionRow) > :nth-child(3) {
+    display: none;
+  }
+
+  .unitColumn {
+    width: 37%;
+  }
+
+  .sheet th,
+  .sheet td {
+    height: 24px;
+    padding-right: 5px;
+    padding-left: 5px;
+  }
+
+  .valueCell {
+    font-size: 9.5px;
+  }
+
+  .sheet td.valueCell {
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+
+  .channelCell {
+    font-size: 7.5px;
+  }
+}

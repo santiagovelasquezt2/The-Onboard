@@ -1,0 +1,15 @@
+/public/media/car/amg-w14-runtime-v2.glb -text
+/public/media/helmet/russell-glass-shell.glb -text
+/public/media/track/montreal-runtime-v2.glb -text
+/public/basis/basis_transcoder.wasm -text
+/public/fonts/ScribbleFont-Regular.otf -text
+/public/fonts/ScribbleFont-Regular.woff2 -text
+
+/public/basis/LICENSE text eol=lf
+/public/basis/basis_transcoder.js text eol=lf
+/public/favicon.svg text eol=lf
+/public/THIRD_PARTY_NOTICES.txt text eol=lf
+/public/replays/2024-montreal-q-d63-lap22.json text eol=lf
+/public/robots.txt text eol=lf
+/public/site.webmanifest text eol=lf
+/public/sitemap.xml text eol=lf

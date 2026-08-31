@@ -4,7 +4,7 @@ Working title for the app. Repo folder: `Openf1-garage`.
 
 ## What it is
 
-A **historical** F1 onboard replay: one golden lap, with **onboard video** and a **third-person 3D twin** on the same playhead. Telemetry from [OpenF1](https://openf1.org) stays honest to that clock — no invented passes, no live race control.
+A **historical** F1 onboard replay: one golden lap, with **onboard video** and a **3D twin** on the same playhead. Telemetry from [OpenF1](https://openf1.org) stays honest to that clock — no invented passes, no live race control.
 
 Audience for this doc: Santiago + agents building the project (and later the README / interview story).
 
@@ -22,7 +22,7 @@ Audience for this doc: Santiago + agents building the project (and later the REA
 
 - Top: nav bar
 - Top-left: onboard camera (HTML5 video)
-- Rest: 3D scene — car on track, **defaults to third person**
+- Rest: 3D scene — car on track, **defaults to a car-local FOM-style TV Pod view**; third person is the escape view
 - Shared playhead: play / pause / scrub / speed; video, 3D pose, and telemetry agree at time *t*
 
 ## Assets (v1)
@@ -48,6 +48,7 @@ Audience for this doc: Santiago + agents building the project (and later the REA
 - One driver, one lap, one track
 - Join OpenF1 samples to the lap / session clock
 - Sync video ↔ telemetry ↔ 3D car pose
+- Toggle between recorded telemetry and clearly labelled, derived vehicle-motion physics: longitudinal, lateral, and combined G
 - Offline-friendly demo via replay file + local video
 - Dark, quiet garage feel (not MultiViewer / esports chrome)
 
@@ -55,15 +56,15 @@ Audience for this doc: Santiago + agents building the project (and later the REA
 
 - Live / paid OpenF1
 - Two-car compare (same-time or same-place)
-- G-force estimates / tire-load heatmaps (later)
+- Individual tyre-force / tyre-load heatmaps, downforce, suspension, or grip-use estimates
 - Video scraping or committing F1 footage
-- First-person cockpit as default (third person first)
+- Detached third-person camera as the default
 - Multi-session catalog / “three tracks” product
 - Team radio, betting, race-control clone
 
 ## Done means
 
-You can open the local app, play Russell’s Montreal pole lap, and **video + third-person 3D + telemetry stay aligned** on one playhead — including when scrubbing. Gaps and sync disagreements are visible, not papered over.
+You can open the local app, play Russell’s Montreal pole lap, and **video + TV Pod 3D + telemetry / derived vehicle motion stay aligned** on one playhead — including when scrubbing and switching workbook views. Gaps and sync disagreements are visible, not papered over.
 
 ## Interview one-liner
 

@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "2024-montreal-q-d63-lap22-v1",
+  "assets": [
+    {
+      "id": "favicon",
+      "source": "public/favicon.svg",
+      "output": "favicon.svg",
+      "delivery": "bundled",
+      "bytes": 330,
+      "sha256": "15d143f635af28bde62d13fffcf9bc3640f3da9111b83316e8001346e74223a2"
+    },
+    {
+      "id": "third-party-notices",
+      "source": "public/THIRD_PARTY_NOTICES.txt",
+      "output": "THIRD_PARTY_NOTICES.txt",
+      "delivery": "bundled",
+      "bytes": 5743,
+      "sha256": "530942f20f23ffba40f0b6c4ca9b009aadee38e1fd3b82f48e82e6c13fdc9d1a"
+    },
+    {
+      "id": "robots",
+      "source": "public/robots.txt",
+      "output": "robots.txt",
+      "delivery": "bundled",
+      "bytes": 78,
+      "sha256": "4ab965a21d7adcd402f2cd582422128304bc046780d6ebf3c0b9d3ee49596fd0"
+    },
+    {
+      "id": "site-manifest",
+      "source": "public/site.webmanifest",
+      "output": "site.webmanifest",
+      "delivery": "bundled",
+      "bytes": 391,
+      "sha256": "3cf957057795e9ec7441e4cfa99cb2bb61c4289061618962268ce8d93c11e2ac"
+    },
+    {
+      "id": "sitemap",
+      "source": "public/sitemap.xml",
+      "output": "sitemap.xml",
+      "delivery": "bundled",
+      "bytes": 248,
+      "sha256": "da08afafb1ed8e75895a926fe9fb45b831ef94e3f43d8e02807199f040c5c162"
+    },
+    {
+      "id": "scribble-font-otf",
+      "source": "public/fonts/ScribbleFont-Regular.otf",
+      "output": "fonts/ScribbleFont-Regular.otf",
+      "delivery": "bundled",
+      "bytes": 65504,
+      "sha256": "faf0e62b53595693a273e5ddd3e1257a7fcf7c7a53024fb46138a035279008f8"
+    },
+    {
+      "id": "scribble-font-woff2",
+      "source": "public/fonts/ScribbleFont-Regular.woff2",
+      "output": "fonts/ScribbleFont-Regular.woff2",
+      "delivery": "bundled",
+      "bytes": 11956,
+      "sha256": "4d7eb9939857535804930385a8b2fba5487db17f1da8b2c8d5a08a0867d5dae9"
+    },
+    {
+      "id": "basis-license",
+      "source": "public/basis/LICENSE",
+      "output": "basis/LICENSE",
+      "delivery": "runtime",
+      "bytes": 11357,
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+    },
+    {
+      "id": "basis-transcoder-js",
+      "source": "public/basis/basis_transcoder.js",
+      "output": "basis/basis_transcoder.js",
+      "delivery": "runtime",
+      "bytes": 57529,
+      "sha256": "8478b5b6d6b74e7d3082b89f6417321d8d1dc0307f2b30d4484bb11b441696a1"
+    },
+    {
+      "id": "basis-transcoder-wasm",
+      "source": "public/basis/basis_transcoder.wasm",
+      "output": "basis/basis_transcoder.wasm",
+      "delivery": "runtime",
+      "bytes": 527333,
+      "sha256": "6cf17dc889352c42e9acf8897107978d127005fe3386c36a0e3845e27967630a"
+    },
+    {
+      "id": "golden-lap-replay",
+      "source": "public/replays/2024-montreal-q-d63-lap22.json",
+      "output": "replays/2024-montreal-q-d63-lap22.json",
+      "delivery": "runtime",
+      "bytes": 91745,
+      "sha256": "27bb365d4d8891f2590bc3fe6d799cf876961e08b7083842f1f8ae5527a47b0f"
+    },
+    {
+      "id": "russell-glass-helmet",
+      "source": "public/media/helmet/russell-glass-shell.glb",
+      "output": "media/helmet/russell-glass-shell.glb",
+      "delivery": "runtime",
+      "bytes": 5657752,
+      "sha256": "7aedb5ec378f727c525bcc3a90923c9c3a911ce398c68245b735b90d6985e09d"
+    },
+    {
+      "id": "montreal-runtime-track",
+      "source": "public/media/track/montreal-runtime-v2.glb",
+      "output": "media/track/montreal-runtime-v2.glb",
+      "delivery": "runtime",
+      "bytes": 53109696,
+      "sha256": "8fbd78cdc825176250d36fab6e8ed0c5a36344309f631dcd71c46da8b8bebcea"
+    },
+    {
+      "id": "w14-runtime-car",
+      "source": "public/media/car/amg-w14-runtime-v2.glb",
+      "output": "media/car/amg-w14-runtime-v2.glb",
+      "delivery": "runtime",
+      "bytes": 13164116,
+      "sha256": "9d132d527568a1b246d99ec3e4a6063c7e6d4836d8d550d7e71c5ee90456eeb9"
+    }
+  ]
+}

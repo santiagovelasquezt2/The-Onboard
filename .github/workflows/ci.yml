@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Release gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Pin npm
+        run: npm install --global npm@11.10.1
+
+      - name: Verify toolchain
+        run: npm run release:toolchain
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Verify tracked release assets
+        run: npm run release:git-assets
+
+      - name: Verify runtime asset manifest
+        run: npm run release:preflight
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Build and verify deploy output
+        run: npm run build
+
+      - name: Reject whitespace errors
+        run: git diff --check
+
+      - name: Reject generated tracked changes
+        run: git diff --exit-code
