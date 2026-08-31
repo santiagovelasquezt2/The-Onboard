@@ -1,6 +1,6 @@
 # Ingest CLI
 
-Pulls OpenF1 **historical** data for TheOnboard’s golden lap and writes a
+Pulls OpenF1 **historical** data for The-Onboard’s golden lap and writes a
 compact replay JSON under `data/replays/`, plus a browser-served mirror under
 `public/replays/`. The Vite UI reads that cache only — it never calls OpenF1 at
 runtime.

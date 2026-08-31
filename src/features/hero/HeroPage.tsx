@@ -635,7 +635,7 @@ export default function HeroPage() {
           aria-labelledby="landing-title"
         >
           <h1 className={styles.visuallyHidden} id="landing-title">
-            The Onboard
+            The-Onboard
           </h1>
 
           <SilentErrorBoundary label="hero scene">
@@ -689,9 +689,9 @@ export default function HeroPage() {
           </button>
 
           <a
-            aria-label="View The Onboard repository on GitHub"
+            aria-label="View The-Onboard repository on GitHub"
             className={styles.githubLink}
-            href="https://github.com/santiagovelasquezt2/Openf1-garage"
+            href="https://github.com/santiagovelasquezt2/The-Onboard"
             rel="noreferrer"
             target="_blank"
           >

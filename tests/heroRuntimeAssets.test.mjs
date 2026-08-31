@@ -65,8 +65,9 @@ test('landing uses the restored GitHub mark and keeps its public SVG source', as
 
   assert.match(
     heroSource,
-    /href="https:\/\/github\.com\/santiagovelasquezt2\/Openf1-garage"/u,
+    /href="https:\/\/github\.com\/santiagovelasquezt2\/The-Onboard"/u,
   )
+  assert.match(heroSource, />\s*The-Onboard\s*</u)
   assert.match(heroSource, /<Icon name="github" \/>/u)
   assert.match(heroSource, /<SilentErrorBoundary label="hero scene">/u)
   assert.doesNotMatch(heroSource, /<Icon name="code" \/>/u)

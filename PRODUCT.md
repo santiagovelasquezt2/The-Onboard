@@ -1,6 +1,6 @@
-# TheOnboard — Product definition
+# The-Onboard — Product definition
 
-Working title for the app. Repo folder: `Openf1-garage`.
+Product name and repository: `The-Onboard`.
 
 ## What it is
 

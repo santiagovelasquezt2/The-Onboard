@@ -1,4 +1,4 @@
-"""Non-destructive Blender pass for TheOnboard's Montreal track asset.
+"""Non-destructive Blender pass for The-Onboard's Montreal track asset.
 
 Run this inside the Blender scene produced by importing ``montreal.glb``.
 The original ``montreal`` object and source images are retained as recoverable
@@ -263,7 +263,7 @@ def _connect_normal(
     if texture is None:
         texture = nodes.new("ShaderNodeTexImage")
         texture.name = "TheOnboard Normal Texture"
-        texture.label = "TheOnboard derived surface normal"
+        texture.label = "The-Onboard derived surface normal"
     texture.image = image
     texture.interpolation = "Linear"
     normal_map = nodes.get("TheOnboard Normal Map")

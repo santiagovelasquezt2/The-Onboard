@@ -1,6 +1,6 @@
 {
-  "name": "TheOnboard",
-  "short_name": "TheOnboard",
+  "name": "The-Onboard",
+  "short_name": "The-Onboard",
   "description": "A synchronized F1 onboard replay using OpenF1 telemetry and a 3D twin.",
   "start_url": "/",
   "display": "standalone",

@@ -1,4 +1,4 @@
-# Local media assets (TheOnboard)
+# Local media assets (The-Onboard)
 
 Vite serves files under `public/` at the site root. Place local assets here so the app can load them at `/media/...` URLs.
 

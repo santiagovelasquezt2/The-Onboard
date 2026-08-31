@@ -72,58 +72,58 @@ flowchart TD
 ### Root isolation
 
 [`src/main.tsx`](../../src/main.tsx)
-Repo: Openf1-garage
+Repo: The-Onboard
 
 Chooses one lazy-loaded root. The existing application and its section-recorder effects never mount on the Lab endpoint.
 
 [`src/routing.ts`](../../src/routing.ts)
-Repo: Openf1-garage
+Repo: The-Onboard
 
 Owns the small, testable pathname contract. `/driving-line-lab` takes precedence even if unrelated query parameters are present.
 
 ### Playback and manual placement
 
 [`src/features/replay/calibration/DrivingLineLabPage.tsx`](../../src/features/replay/calibration/DrivingLineLabPage.tsx)
-Repo: Openf1-garage
+Repo: The-Onboard
 
 Owns the Lab-only playback clock, keyboard state, manual lateral position, camera view, pass selection, and explicit export actions. Aerial positioning shows the real footage 0.5 seconds ahead for steering anticipation; switching to 3D onboard comparison reseeks the footage to the same canonical vehicle lap time.
 
 [`src/features/replay/components/OnboardVideo.tsx`](../../src/features/replay/components/OnboardVideo.tsx)
-Repo: Openf1-garage
+Repo: The-Onboard
 
 Supports an optional post-lap media tail so the aerial positioning preview can remain 0.5 seconds ahead while the 3D car still reaches the official finish line. Exact onboard comparison uses no extension.
 
 [`src/features/replay/calibration/drivingLineLabClock.ts`](../../src/features/replay/calibration/drivingLineLabClock.ts)
-Repo: Openf1-garage
+Repo: The-Onboard
 
 Defines the reversible car-time/video-time mapping for both modes: a half-second aerial preview and a zero-offset onboard comparison. Changing views preserves canonical car time and changes only the source-video seek.
 
 [`src/features/replay/calibration/DrivingLineLabPanel.tsx`](../../src/features/replay/calibration/DrivingLineLabPanel.tsx)
-Repo: Openf1-garage
+Repo: The-Onboard
 
 Exposes pass controls, lap progress, position feedback, a compact contact board that starts at 28 boxes and can expand to 128, per-pass add/remove controls, white-line/curb/reference-point types, mark and undo actions, camera switching, a perceptual 14–78 m aerial-distance control with explicit Closer/Farther endpoints, visible timing-mode status, and export status. Slots can be selected in any order. Selecting a completed slot pauses playback and restores its saved lap time, lateral position, and type so that marking again edits that exact observation.
 
 ### Storage and preview transformation
 
 [`src/features/replay/calibration/drivingLineLab.ts`](../../src/features/replay/calibration/drivingLineLab.ts)
-Repo: Openf1-garage
+Repo: The-Onboard
 
 Defines the versioned run and mark schema. Every pass stores its own one-based contact-slot count, defaulting legacy data and new passes to 28. Adding inserts a slot immediately after the selected contact and renumbers later observations; removing deletes the selected slot and renumbers later observations. Old browser marks are assigned deterministic slots during sanitization. Spatial identity is closed-route progress plus absolute lateral offset; video time remains provenance only.
 
 [`src/features/replay/calibration/proposedDrivingLine.ts`](../../src/features/replay/calibration/proposedDrivingLine.ts), [`src/features/replay/calibration/proposedDrivingLineVariant2.ts`](../../src/features/replay/calibration/proposedDrivingLineVariant2.ts), and [`src/features/replay/calibration/proposedDrivingLinePass.ts`](../../src/features/replay/calibration/proposedDrivingLinePass.ts)
-Repo: Openf1-garage
+Repo: The-Onboard
 
 Validate and analyze the bundled pass, then fit a bounded periodic cubic line with a lateral-acceleration penalty. Curb contacts and reference points in the final 3.5% of route progress before a curb are priority targets; ordinary straight references remain softer timing guidance. The penalty relaxes only around those corner targets so the fit can reach them without spreading curvature across the straights. The normal replay keeps the real video mounted top-left as the master clock and switches the single main 3D canvas to the proposal when selected in the navbar. The smooth green path remains distinct from the raw colored observations.
 
 The first fit is exported unchanged as proposed onboard 1. Proposed onboard 2 adds a separate set of compact, zero-slope correction windows for the reviewed T5, T6, T8, T9, T10, and T14 issues. It never mutates or refits onboard 1. The correction table is sampled twice as densely and circularly smoothed before composition to prevent local edits from introducing a one-frame lateral snap; protected T13 and T14-exit anchors remain effectively unchanged. Both versions use the same 64 raw markers, media master clock, and 3D timing offset.
 
 [`src/features/replay/scene/DrivingLinePreview.tsx`](../../src/features/replay/scene/DrivingLinePreview.tsx)
-Repo: Openf1-garage
+Repo: The-Onboard
 
 Samples the existing scalar lateral-offset model only inside each raw mark's local influence, projects height onto confirmed driveable road, and draws those green spans slightly above the surface. Unmarked parts of the accepted baseline stay visible in their normal styling rather than being presented as Lab-authored output.
 
 [`vite.config.ts`](../../vite.config.ts)
-Repo: Openf1-garage
+Repo: The-Onboard
 
 Adds a development-only POST endpoint that writes an explicitly saved pass to `data/calibration-runs/<pass-id>.json` for later agent-assisted fitting and comparison.
 

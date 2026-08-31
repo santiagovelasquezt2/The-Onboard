@@ -1,7 +1,7 @@
-THEONBOARD THIRD-PARTY NOTICES
+THE-ONBOARD THIRD-PARTY NOTICES
 Last updated: 2026-08-31
 
-TheOnboard is an unofficial, non-commercial fan and portfolio project. It is
+The-Onboard is an unofficial, non-commercial fan and portfolio project. It is
 not associated with, affiliated with, endorsed by, or sponsored by Formula 1,
 the FIA, Mercedes-AMG Petronas Formula One Team, George Russell, or their
 affiliates. F1, FORMULA ONE, FIA FORMULA ONE WORLD CHAMPIONSHIP, GRAND PRIX,
@@ -43,8 +43,8 @@ and the glass treatment and number 63 geometry were added. The helmet
 derivative is distributed under CC BY-NC-SA 4.0.
 
 Detailed model provenance and transformation notes remain in:
-https://github.com/santiagovelasquezt2/Openf1-garage/blob/master/public/media/README.md
-https://github.com/santiagovelasquezt2/Openf1-garage/blob/master/public/media/helmet/README.md
+https://github.com/santiagovelasquezt2/The-Onboard/blob/master/public/media/README.md
+https://github.com/santiagovelasquezt2/The-Onboard/blob/master/public/media/helmet/README.md
 
 
 VIDEO FOOTAGE
@@ -59,7 +59,7 @@ Sports, and TikTok footage. Local source metadata identifies TikTok clip IDs
 7657003703106342164 and 7550758049900743958; the third reel includes visible
 @fastlane_culture and Sky Sports attribution.
 
-No redistribution license for this footage is asserted by TheOnboard. All
+No redistribution license for this footage is asserted by The-Onboard. All
 footage, broadcasts, music, trademarks, and related rights remain with their
 respective owners. The files are included at the project owner's direction for
 this unofficial, non-commercial fan and portfolio demonstration. Replace or
@@ -145,4 +145,4 @@ SOFTWARE.
 
 Additional dependency versions and license identifiers are recorded in the
 repository's package-lock.json and in each package's distributed license file:
-https://github.com/santiagovelasquezt2/Openf1-garage
+https://github.com/santiagovelasquezt2/The-Onboard

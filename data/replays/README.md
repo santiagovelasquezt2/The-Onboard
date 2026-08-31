@@ -1,6 +1,6 @@
 # Replay artifacts
 
-Compact **offline** telemetry packs for TheOnboard. The app loads the mirrored
+Compact **offline** telemetry packs for The-Onboard. The app loads the mirrored
 file from `public/replays/` at runtime; it must **not** call the OpenF1 API from
 the browser.
 

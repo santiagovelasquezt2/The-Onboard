@@ -7,8 +7,8 @@
       "source": "public/favicon.svg",
       "output": "favicon.svg",
       "delivery": "bundled",
-      "bytes": 330,
-      "sha256": "15d143f635af28bde62d13fffcf9bc3640f3da9111b83316e8001346e74223a2"
+      "bytes": 331,
+      "sha256": "79e0e07d1547fd83fe4739d74a9b847ef0a29989699eb1038f5be6cd8d0e9271"
     },
     {
       "id": "icons",
@@ -23,32 +23,32 @@
       "source": "public/THIRD_PARTY_NOTICES.txt",
       "output": "THIRD_PARTY_NOTICES.txt",
       "delivery": "bundled",
-      "bytes": 6573,
-      "sha256": "9ab9f9963373ac1a7def9114975ff72dd3bec5e0bfc2410c1e7e471c51f6c07f"
+      "bytes": 6570,
+      "sha256": "62b8ab48cd5bf3d1c93f95b3e978fd8497b6e35384566bca7a7cb7adcf94b144"
     },
     {
       "id": "robots",
       "source": "public/robots.txt",
       "output": "robots.txt",
       "delivery": "bundled",
-      "bytes": 78,
-      "sha256": "4ab965a21d7adcd402f2cd582422128304bc046780d6ebf3c0b9d3ee49596fd0"
+      "bytes": 76,
+      "sha256": "a49cb544be8277f18052ad5259028b28f511222ed515e5e86d5ee3c96c0d6639"
     },
     {
       "id": "site-manifest",
       "source": "public/site.webmanifest",
       "output": "site.webmanifest",
       "delivery": "bundled",
-      "bytes": 391,
-      "sha256": "3cf957057795e9ec7441e4cfa99cb2bb61c4289061618962268ce8d93c11e2ac"
+      "bytes": 393,
+      "sha256": "85789b799997515d2aa022f705b34ee289dcebe5a55314583c2d5e93398e3de8"
     },
     {
       "id": "sitemap",
       "source": "public/sitemap.xml",
       "output": "sitemap.xml",
       "delivery": "bundled",
-      "bytes": 248,
-      "sha256": "da08afafb1ed8e75895a926fe9fb45b831ef94e3f43d8e02807199f040c5c162"
+      "bytes": 244,
+      "sha256": "640155534df8d6c1fc4e90c458f5bbea6a5a5f4fcc7eff8b03a356251e521287"
     },
     {
       "id": "scribble-font-otf",

@@ -1,6 +1,6 @@
 import type { AppMode } from './routing'
 
-const SITE_ORIGIN = 'https://openf1-garage.vercel.app'
+const SITE_ORIGIN = 'https://the-onboard.vercel.app'
 
 export type RouteMetadata = {
   title: string
@@ -12,7 +12,7 @@ export type RouteMetadata = {
 export function routeMetadataFor(mode: AppMode): RouteMetadata {
   if (mode === 'replay') {
     return {
-      title: 'Russell’s Montreal pole lap — TheOnboard',
+      title: 'Russell’s Montreal pole lap — The-Onboard',
       description:
         'Replay George Russell’s 2024 Montreal pole lap with synchronized OpenF1 telemetry and a 3D twin.',
       canonicalPath: '/replay',
@@ -21,7 +21,7 @@ export function routeMetadataFor(mode: AppMode): RouteMetadata {
   }
   if (mode === 'hero') {
     return {
-      title: 'TheOnboard — Synchronized F1 onboard replay',
+      title: 'The-Onboard — Synchronized F1 onboard replay',
       description:
         'One pole lap, one honest clock: onboard video, OpenF1 telemetry, and a synchronized 3D twin.',
       canonicalPath: '/',
@@ -30,8 +30,8 @@ export function routeMetadataFor(mode: AppMode): RouteMetadata {
   }
 
   return {
-    title: 'Page not found — TheOnboard',
-    description: 'That route is not part of TheOnboard replay experience.',
+    title: 'Page not found — The-Onboard',
+    description: 'That route is not part of The-Onboard replay experience.',
     canonicalPath: '/',
     indexable: false,
   }

@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * TheOnboard ingest — resolve the golden lap and its sample streams via the
+ * The-Onboard ingest — resolve the golden lap and its sample streams via the
  * OpenF1 historical API, then write a compact replay JSON for the UI cache.
  *
  * Requests use bounded 429 backoff. Keep pulls deliberate and infrequent.

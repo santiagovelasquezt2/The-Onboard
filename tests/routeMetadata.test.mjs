@@ -9,6 +9,8 @@ test('public routes expose distinct titles and canonical paths', () => {
   assert.equal(routeMetadataFor('hero').canonicalPath, '/')
   assert.equal(routeMetadataFor('replay').canonicalPath, '/replay')
   assert.match(routeMetadataFor('replay').title, /Montreal pole lap/)
+  assert.match(routeMetadataFor('hero').title, /The-Onboard/)
+  assert.doesNotMatch(indexHtml, /TheOnboard|openf1-garage/u)
 })
 
 test('internal and missing routes are not indexable', () => {

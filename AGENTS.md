@@ -11,7 +11,7 @@
 - For the landing glass hero, keep type dead-still and let a translucent optical-glass object (helmet) do the motion/refraction; avoid rainbow/liquid-glass, floor planes, and extra lights.
 
 ## Learned Workspace Facts
-- TheOnboard (workspace Openf1-garage) is a greenfield historical F1 onboard replay product, not live race control.
+- The-Onboard (local workspace folder `Openf1-garage`) is a greenfield historical F1 onboard replay product, not live race control.
 - Locked v1 scope: 1 driver, 1 lap, 1 track — George Russell’s 2024 Canadian GP Qualifying pole lap (Montreal / Circuit Gilles Villeneuve); OpenF1 `session_key` 9527, driver 63, lap 22.
 - Locked v1 UI: full-bleed FOM-style T-cam (car-local mount; escape via `?camera=chase`); onboard video PiP top-left; stacked car-data pills under the PiP; nav strip top-right; shared playhead keeps video, 3D, and telemetry aligned.
 - App routes: `/` glass-helmet landing page (`HeroPage`); `/hero` is an alias; `/replay` onboard twin; the three landing reels and pinned onboard MP4 ship as exact release assets.
