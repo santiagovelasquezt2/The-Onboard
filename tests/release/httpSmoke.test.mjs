@@ -40,7 +40,7 @@ test('production HTML must link the release web manifest', () => {
   )
 })
 
-test('a real 404 with the branded React app shell passes', async () => {
+test('a real 404 with the compiled React app shell passes', async () => {
   await assert.doesNotReject(
     verifyNotFoundRoute(
       appBaseUrl,
@@ -61,14 +61,14 @@ test('an SPA HTML 200 fallback fails negative-route smoke', async () => {
   )
 })
 
-test('a generic text 404 fails the branded fallback check', async () => {
+test('a generic text 404 fails the compiled app-shell check', async () => {
   await assert.rejects(
     verifyNotFoundRoute(
       appBaseUrl,
       '/driving-line-lab',
       async () => response(404, 'text/plain', 'Not Found'),
     ),
-    /expected the branded HTML app shell/,
+    /expected the compiled HTML app shell/,
   )
 })
 

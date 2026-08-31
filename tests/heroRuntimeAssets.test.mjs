@@ -7,6 +7,8 @@ const heroSourceUrl = new URL(
   '../src/features/hero/HeroPage.tsx',
   import.meta.url,
 )
+const iconSourceUrl = new URL('../src/ui/Icon.tsx', import.meta.url)
+const iconSpriteUrl = new URL('../public/icons.svg', import.meta.url)
 const packageMetadataUrl = new URL(
   '../node_modules/@pmndrs/assets/package.json',
   import.meta.url,
@@ -52,4 +54,22 @@ test('hero keeps the approved transmission budget and sleeps offscreen', async (
     source,
     /frameloop=\{heroCanvasVisible \? 'always' : 'never'\}/u,
   )
+})
+
+test('landing uses the restored GitHub mark and keeps its public SVG source', async () => {
+  const [heroSource, iconSource, iconSprite] = await Promise.all([
+    readFile(heroSourceUrl, 'utf8'),
+    readFile(iconSourceUrl, 'utf8'),
+    readFile(iconSpriteUrl, 'utf8'),
+  ])
+
+  assert.match(
+    heroSource,
+    /href="https:\/\/github\.com\/santiagovelasquezt2\/Openf1-garage"/u,
+  )
+  assert.match(heroSource, /<Icon name="github" \/>/u)
+  assert.doesNotMatch(heroSource, /<Icon name="code" \/>/u)
+  assert.match(iconSource, /name === 'github'/u)
+  assert.match(iconSource, /fill="currentColor"/u)
+  assert.match(iconSprite, /<symbol id="github-icon" viewBox="0 0 19 19">/u)
 })

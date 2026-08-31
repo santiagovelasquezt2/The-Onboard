@@ -30,10 +30,9 @@ runtime media, replay, or Basis paths is tracked.
 `npm run build` stages the manifest allowlist, builds the app, verifies every
 staged hash and size, rejects unexpected deploy files, and enforces a 160 MiB
 artifact budget. It also copies the built app shell to `dist/404.html`; Vercel
-serves that file with HTTP 404 for unmatched paths, then React renders the
-branded `NotFoundPage` from the original pathname. Output verification requires
-`404.html` to remain byte-identical to `index.html`. The generated `.release/`
-and `dist/` directories stay ignored.
+serves that file with HTTP 404 for unmatched paths without rendering a custom
+fallback page. Output verification requires `404.html` to remain byte-identical
+to `index.html`. The generated `.release/` and `dist/` directories stay ignored.
 
 ## Runtime environment
 
@@ -65,11 +64,12 @@ dependency-free check verifies `/`, `/hero`, and `/replay`, security
 headers, immutable hashed bundles, and every manifest asset without downloading
 the large GLBs or videos. MP4 checks also require the correct content type and
 working byte ranges for playback and scrubbing. It requires real HTTP 404
-responses with the branded app shell for `/driving-line-lab` and an
+responses with the compiled app shell for `/driving-line-lab` and an
 unrecognized canary route; an HTML 200 fallback fails the release smoke.
 
 Before production promotion, also cold-load `/replay` in Chrome and confirm the
-bundled video plus textured track and car assets exit the loader. Exercise
+replay shell appears directly while the bundled video, textured track, and car
+assets become ready. Exercise
 play/pause, Space, scrub, playback rate, Data/Physics, and both camera modes;
 the console must contain no errors.
 

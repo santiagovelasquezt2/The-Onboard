@@ -46,7 +46,12 @@
 }
 
 .heroPanel {
-  --view-button-top: clamp(650px, calc(74vh + 30px), 830px);
+  --view-button-top: min(calc(74vh + 30px), calc(100vh - 9rem), 830px);
+  --view-button-top: min(
+    calc(74dvh + 30px),
+    calc(100dvh - var(--safe-area-bottom) - 9rem),
+    830px
+  );
   left: 0;
   width: 100vw;
 }
@@ -154,6 +159,7 @@
   width: 2rem;
   height: 2rem;
   place-items: center;
+  color: #f1efe9;
   transform: translateX(-50%);
   transition: transform 160ms ease;
 }

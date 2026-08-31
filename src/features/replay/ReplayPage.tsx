@@ -9,7 +9,6 @@ import { PhysicsWorkbook } from './components/PhysicsWorkbook'
 import { TelemetryWorkbook } from './components/TelemetryWorkbook'
 import { OnboardVideo } from './components/OnboardVideo'
 import { Playhead } from './components/Playhead'
-import { ReplayEntryLoader } from './components/ReplayEntryLoader'
 import { TrackScene } from './scene/TrackScene'
 import {
   clampLapTimelineTime,
@@ -58,17 +57,6 @@ export default function ReplayPage() {
   const [playing, setPlaying] = useState(false)
   const [playbackRate, setPlaybackRate] = useState(1)
   const [videoReady, setVideoReady] = useState(false)
-  const [videoFrameReady, setVideoFrameReady] = useState(false)
-  const [scenePresented, setScenePresented] = useState(false)
-  const [sceneUnavailable, setSceneUnavailable] = useState(false)
-  const [loaderExitComplete, setLoaderExitComplete] = useState(false)
-  const [nonVideoEntryFailure, setNonVideoEntryFailure] = useState<
-    string | null
-  >(null)
-  const [videoEntryFailure, setVideoEntryFailure] = useState<string | null>(null)
-  const [localVideoSourceUrl, setLocalVideoSourceUrl] = useState<string | null>(
-    null,
-  )
   const [replay, setReplay] = useState<Awaited<
     ReturnType<typeof loadReplay>
   > | null>(null)
@@ -82,8 +70,6 @@ export default function ReplayPage() {
   )
   const [mobileWorkbookOpen, setMobileWorkbookOpen] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
-  const replaySurfaceRef = useRef<HTMLDivElement | null>(null)
-  const localVideoSourceUrlRef = useRef<string | null>(null)
   const replaySeekRef = useRef<ReplaySeekState>({
     seekEpoch: 0,
     pendingLapTimeSeconds: null,
@@ -96,78 +82,6 @@ export default function ReplayPage() {
     }),
     [durationSeconds],
   )
-  const entryFailure = nonVideoEntryFailure ?? videoEntryFailure
-  const canChooseLocalVideo =
-    nonVideoEntryFailure === null && videoEntryFailure !== null
-  const replayContentReady =
-    replay !== null &&
-    (scenePresented || sceneUnavailable) &&
-    videoFrameReady &&
-    entryFailure === null
-  const replayEntryReady = loaderExitComplete
-
-  const reportNonVideoEntryFailure = useCallback((message: string) => {
-    setNonVideoEntryFailure((currentFailure) => currentFailure ?? message)
-  }, [])
-  const reportVideoEntryFailure = useCallback((message: string) => {
-    setVideoEntryFailure((currentFailure) => currentFailure ?? message)
-  }, [])
-  const handleScenePresented = useCallback(() => {
-    setScenePresented(true)
-  }, [])
-  const handleWebGLUnavailable = useCallback(() => {
-    setSceneUnavailable(true)
-  }, [])
-  const handleSceneError = useCallback(() => {
-    reportNonVideoEntryFailure('The 3D replay assets could not be loaded.')
-  }, [reportNonVideoEntryFailure])
-  const handleVideoError = useCallback(
-    (message: string) => reportVideoEntryFailure(message),
-    [reportVideoEntryFailure],
-  )
-  const handleVideoSourceMissing = useCallback(() => {
-    reportVideoEntryFailure(
-      'Choose your local onboard MP4 to start the synchronized lap.',
-    )
-  }, [reportVideoEntryFailure])
-  const handleLoaderExitComplete = useCallback(() => {
-    setLoaderExitComplete(true)
-  }, [])
-  const handleEntryRetry = useCallback(() => {
-    window.location.reload()
-  }, [])
-  const handleChooseVideo = useCallback(
-    (file: File) => {
-      const looksLikeMp4 =
-        file.type === 'video/mp4' || file.name.toLowerCase().endsWith('.mp4')
-      if (!looksLikeMp4) {
-        setVideoEntryFailure('Choose an MP4 video file.')
-        return
-      }
-
-      const nextSourceUrl = URL.createObjectURL(file)
-      const previousSourceUrl = localVideoSourceUrlRef.current
-      if (previousSourceUrl) URL.revokeObjectURL(previousSourceUrl)
-      localVideoSourceUrlRef.current = nextSourceUrl
-      setPlaying(false)
-      setVideoReady(false)
-      setVideoFrameReady(false)
-      setLoaderExitComplete(false)
-      setPlayheadSeconds(-ONBOARD_LAP_START_SECONDS)
-      setLocalVideoSourceUrl(nextSourceUrl)
-      setVideoEntryFailure(null)
-    },
-    [],
-  )
-
-  useEffect(
-    () => () => {
-      const localSourceUrl = localVideoSourceUrlRef.current
-      if (localSourceUrl) URL.revokeObjectURL(localSourceUrl)
-    },
-    [],
-  )
-
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return
 
@@ -200,17 +114,12 @@ export default function ReplayPage() {
           '[replay] cache unavailable; using static scene pose',
           error,
         )
-        if (!cancelled) {
-          reportNonVideoEntryFailure(
-            'The replay telemetry could not be loaded.',
-          )
-        }
       })
 
     return () => {
       cancelled = true
     }
-  }, [reportNonVideoEntryFailure])
+  }, [])
 
   const handleLapTimeUpdate = useCallback(
     (videoLapTimeSeconds: number) => {
@@ -228,7 +137,7 @@ export default function ReplayPage() {
 
   const handlePlayPause = useCallback(() => {
     const video = videoRef.current
-    if (!replayEntryReady || !videoReady || !video) return
+    if (!videoReady || !video) return
 
     if (video.paused) {
       const lapEnd = videoLapEndSeconds(lapWindow)
@@ -249,13 +158,12 @@ export default function ReplayPage() {
   }, [
     lapWindow,
     markReplaySeek,
-    replayEntryReady,
     videoReady,
   ])
 
   const handleScrub = useCallback(
     (seconds: number) => {
-      if (!replayEntryReady || !videoReady) return
+      if (!videoReady) return
 
       const lapTime = clampLapTimelineTime(seconds, lapWindow)
       setPlayheadSeconds(lapTime)
@@ -265,7 +173,7 @@ export default function ReplayPage() {
         video.currentTime = videoTimeFromLapTime(lapTime, lapWindow)
       }
     },
-    [lapWindow, markReplaySeek, replayEntryReady, videoReady],
+    [lapWindow, markReplaySeek, videoReady],
   )
 
   const resetThirdPersonCamera = useCallback(() => {
@@ -316,22 +224,12 @@ export default function ReplayPage() {
     return () => window.removeEventListener('keydown', handleSpacebar)
   }, [handlePlayPause])
 
-  useEffect(() => {
-    if (!replayEntryReady) return
-
-    replaySurfaceRef.current?.focus({ preventScroll: true })
-  }, [replayEntryReady])
-
   return (
     <div className={styles.app}>
       <div
-        ref={replaySurfaceRef}
         className={styles.replaySurface}
         role="region"
         aria-label="Replay experience"
-        aria-hidden={!replayEntryReady || undefined}
-        inert={!replayEntryReady || undefined}
-        tabIndex={-1}
       >
       <div
         className={styles.scene}
@@ -343,9 +241,6 @@ export default function ReplayPage() {
       >
         <TrackScene
           replay={replay}
-          onScenePresented={handleScenePresented}
-          onSceneError={handleSceneError}
-          onWebGLUnavailable={handleWebGLUnavailable}
           playheadSeconds={scenePlayheadSeconds}
           playing={playing}
           videoRef={videoRef}
@@ -371,10 +266,6 @@ export default function ReplayPage() {
           onLapTimeUpdate={handleLapTimeUpdate}
           onPlayState={setPlaying}
           onSourceReady={setVideoReady}
-          onFrameReady={setVideoFrameReady}
-          onFrameError={handleVideoError}
-          sourceUrl={localVideoSourceUrl ?? undefined}
-          onSourceMissing={handleVideoSourceMissing}
         />
       </section>
 
@@ -405,7 +296,7 @@ export default function ReplayPage() {
       <div className={styles.playhead}>
         <Playhead
           playing={playing}
-          disabled={!replayEntryReady || !videoReady}
+          disabled={!videoReady}
           playheadSeconds={playheadSeconds}
           startSeconds={lapTimelineStartSeconds(lapWindow)}
           durationSeconds={durationSeconds}
@@ -416,18 +307,6 @@ export default function ReplayPage() {
         />
       </div>
       </div>
-
-      {!replayEntryReady ? (
-        <ReplayEntryLoader
-          ready={replayContentReady}
-          failure={entryFailure}
-          onExitComplete={handleLoaderExitComplete}
-          onRetry={handleEntryRetry}
-          onChooseVideo={
-            canChooseLocalVideo ? handleChooseVideo : undefined
-          }
-        />
-      ) : null}
     </div>
   )
 }

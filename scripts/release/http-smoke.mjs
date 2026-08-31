@@ -155,7 +155,7 @@ export async function verifyNotFoundRoute(
   const contentType = response.headers.get('content-type') ?? ''
   if (!contentType.toLowerCase().includes('text/html')) {
     fail(
-      `${url.href} returned HTTP 404 with ${contentType || 'no content-type'}; expected the branded HTML app shell.`,
+      `${url.href} returned HTTP 404 with ${contentType || 'no content-type'}; expected the compiled HTML app shell.`,
     )
   }
   assertSecurityHeaders(response)

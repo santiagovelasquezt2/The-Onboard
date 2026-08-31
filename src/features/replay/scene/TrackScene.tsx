@@ -10,7 +10,7 @@ import {
 import { useFrame, useThree } from '@react-three/fiber'
 import { Environment, Lightformer, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
-import { ReliableCanvas, WebGLFallback } from '../../../ui/WebGLFallback'
+import { ReliableCanvas } from '../../../ui/ReliableCanvas'
 import styles from './TrackScene.module.css'
 import { AssetErrorBoundary } from './AssetErrorBoundary'
 import { Atmosphere } from './Atmosphere'
@@ -36,7 +36,6 @@ import {
 } from './replayQuality'
 import {
   AMBIENT_INTENSITY,
-  CAR_URL,
   CAMERA_FAR,
   CAMERA_FOV,
   CAMERA_NEAR,
@@ -51,15 +50,10 @@ import {
   SUN_COLOR,
   SUN_DIRECTION,
   TONE_MAPPING_EXPOSURE,
-  TRACK_URL,
 } from './sceneConfig'
 
 type TrackSceneProps = {
   replay: ReplayFile | null
-  /** Fires only after a complete WebGL frame contains the loaded replay scene. */
-  onScenePresented?: () => void
-  onSceneError?: (error: Error) => void
-  onWebGLUnavailable?: (error: Error) => void
   playheadSeconds: number
   playing: boolean
   videoRef: RefObject<HTMLVideoElement | null>
@@ -282,83 +276,8 @@ function LoadingOverlay() {
   )
 }
 
-function ErrorOverlay() {
-  return (
-    <div className={styles.overlay} role="alert">
-      <p className={styles.overlayTitle}>Couldn’t load 3D assets</p>
-      <p className={styles.overlayHint}>
-        Expected <code>{TRACK_URL}</code> and <code>{CAR_URL}</code>. Check{' '}
-        <code>public/media/</code> (see README).
-      </p>
-    </div>
-  )
-}
-
-type SceneFrameReporterProps = {
-  enabled: boolean
-  onPresented?: () => void
-}
-
-/**
- * `useProgress` only knows that a loader has settled. This waits for the root
- * Three scene's post-render hook, so a transition can reveal only after a
- * complete canvas frame has actually been drawn.
- */
-function SceneFrameReporter({
-  enabled,
-  onPresented,
-}: SceneFrameReporterProps) {
-  const scene = useThree((state) => state.scene)
-  const invalidate = useThree((state) => state.invalidate)
-  const onPresentedRef = useRef(onPresented)
-  const hasPresentedRef = useRef(false)
-
-  useEffect(() => {
-    onPresentedRef.current = onPresented
-  }, [onPresented])
-
-  useEffect(() => {
-    if (!enabled || !onPresented || hasPresentedRef.current) return
-
-    let disposed = false
-    const previousAfterRender = scene.onAfterRender
-    const reportAfterRender: NonNullable<THREE.Object3D['onAfterRender']> = (
-      ...args
-    ) => {
-      previousAfterRender?.(...args)
-      if (disposed || hasPresentedRef.current) return
-
-      hasPresentedRef.current = true
-      // Resolve after WebGLRenderer completes the current render call. This
-      // keeps React's state update out of Three's render traversal.
-      void Promise.resolve().then(() => {
-        if (!disposed) onPresentedRef.current?.()
-      })
-    }
-
-    // oxlint-disable-next-line react/immutability -- Three exposes this hook on its mutable scene graph.
-    scene.onAfterRender = reportAfterRender
-    // Demand mode can be asleep after the assets commit. Request the frame the
-    // post-render callback is waiting for explicitly.
-    invalidate()
-
-    return () => {
-      disposed = true
-      if (scene.onAfterRender === reportAfterRender) {
-        // oxlint-disable-next-line react/immutability -- restore the renderer hook we replaced above.
-        scene.onAfterRender = previousAfterRender
-      }
-    }
-  }, [enabled, invalidate, onPresented, scene])
-
-  return null
-}
-
 export const TrackScene = memo(function TrackScene({
   replay,
-  onScenePresented,
-  onSceneError,
-  onWebGLUnavailable,
   playheadSeconds,
   playing,
   videoRef,
@@ -403,7 +322,7 @@ export const TrackScene = memo(function TrackScene({
       data-render-quality={renderQuality}
       data-shadow-map-size={qualitySettings.shadowMapSize}
     >
-      <AssetErrorBoundary fallback={<ErrorOverlay />} onError={onSceneError}>
+      <AssetErrorBoundary fallback={null}>
         <ReliableCanvas
           // PCF, not "soft": three r185 deprecated PCFSoftShadowMap and silently
           // downgrades it. A tight SHADOW_EXTENT box keeps PCF looking clean.
@@ -419,8 +338,6 @@ export const TrackScene = memo(function TrackScene({
             // Onboard-ish placeholder until LapModels owns the live T-cam.
             position: [0, ONBOARD_CAMERA_HEIGHT, ONBOARD_CAMERA_BACK],
           }}
-          fallback={<WebGLFallback surface="replay" />}
-          onUnavailable={onWebGLUnavailable}
           rendererOptions={{
             antialias: true,
             // The scene spans 0.25 m to ~15 km; without this the track z-fights.
@@ -466,10 +383,6 @@ export const TrackScene = memo(function TrackScene({
               }
               onCalibrationSectionEnd={onCalibrationSectionEnd}
               shadowMapSize={qualitySettings.shadowMapSize}
-            />
-            <SceneFrameReporter
-              enabled={replay !== null}
-              onPresented={onScenePresented}
             />
           </Suspense>
         </ReliableCanvas>

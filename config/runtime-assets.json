@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "releaseId": "2024-montreal-q-d63-lap22-v2",
+  "releaseId": "2024-montreal-q-d63-lap22-v3",
   "assets": [
     {
       "id": "favicon",
@@ -9,6 +9,14 @@
       "delivery": "bundled",
       "bytes": 330,
       "sha256": "15d143f635af28bde62d13fffcf9bc3640f3da9111b83316e8001346e74223a2"
+    },
+    {
+      "id": "icons",
+      "source": "public/icons.svg",
+      "output": "icons.svg",
+      "delivery": "bundled",
+      "bytes": 5036,
+      "sha256": "ed996290b203ae7a67627c2951838f7412c89b88c71bc91d7480b606315142fd"
     },
     {
       "id": "third-party-notices",

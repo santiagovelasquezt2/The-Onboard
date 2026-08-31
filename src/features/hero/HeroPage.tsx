@@ -20,7 +20,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { RUNTIME_ASSETS } from '../../runtimeAssets'
 import { Icon } from '../../ui/Icon'
-import { ReliableCanvas, WebGLFallback } from '../../ui/WebGLFallback'
+import { ReliableCanvas } from '../../ui/ReliableCanvas'
 import styles from './HeroPage.module.css'
 import {
   HERO_PENCIL_REVEAL_DURATION_MS,
@@ -641,7 +641,6 @@ export default function HeroPage() {
             className={styles.canvas}
             camera={{ fov: 34, position: [0, 0, 7.4] }}
             dpr={[1, 1.25]}
-            fallback={<WebGLFallback surface="hero" />}
             frameloop={heroCanvasVisible ? 'always' : 'never'}
             rendererOptions={{
               alpha: false,
@@ -693,7 +692,7 @@ export default function HeroPage() {
             rel="noreferrer"
             target="_blank"
           >
-            <Icon name="code" />
+            <Icon name="github" />
           </a>
         </section>
 

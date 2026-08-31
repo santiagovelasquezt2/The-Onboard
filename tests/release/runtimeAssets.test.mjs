@@ -12,7 +12,7 @@ import {
 test('release manifest is complete and valid', async () => {
   const manifest = await loadManifest()
   assert.equal(manifest.schemaVersion, 1)
-  assert.equal(manifest.assets.length, 18)
+  assert.equal(manifest.assets.length, 19)
   assert.equal(manifest.assets.filter((asset) => asset.delivery === 'runtime').length, 11)
 })
 
@@ -23,7 +23,7 @@ test('external asset base stages only bundled assets', async () => {
   })
   assert.equal(active.assetBaseUrl, 'https://cdn.example/release/immutable-id')
   assert.ok(active.assets.every((asset) => asset.delivery === 'bundled'))
-  assert.equal(active.assets.length, 7)
+  assert.equal(active.assets.length, 8)
 })
 
 test('external runtime assets require the manifest replay digest', async () => {

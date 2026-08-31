@@ -32,6 +32,7 @@ const ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/
 
 const requiredBundledOutputs = new Set([
   'favicon.svg',
+  'icons.svg',
   'THIRD_PARTY_NOTICES.txt',
   'robots.txt',
   'site.webmanifest',
@@ -599,7 +600,7 @@ async function runCli() {
   if (command === 'not-found') {
     const result = await generateNotFoundDocument()
     console.log(
-      `[release-assets] Generated branded 404.html from index.html (${result.bytes} bytes).`,
+      `[release-assets] Generated 404.html from index.html (${result.bytes} bytes).`,
     )
     return
   }
