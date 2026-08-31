@@ -291,7 +291,6 @@ export const OnboardVideo = forwardRef<HTMLVideoElement | null, OnboardVideoProp
           ref={bindVideo}
           className={styles.video}
           src={resolvedSourceUrl}
-          muted
           playsInline
           preload="auto"
           onLoadedMetadata={(event) => confirmSourceReady(event.currentTarget)}
